@@ -1,6 +1,6 @@
 import abi from "./abi.js";
 
-const contractAddress = "0xE44587809DDD06Af56d9795D41D645CFece42c03";
+const contractAddress = '0xE44587809DDD06Af56d9795D41D645CFece42c03';
 
 const web3 = new Web3(window.ethereum);
 const contract = new web3.eth.Contract(abi, contractAddress);
@@ -24,7 +24,15 @@ async function connectMetaMask() {
   }
 
   try {
-    const account = await window.ethereum.request({ method: 'eth_requestAccounts' })[0];
+    const accounts = (await window.ethereum.request({ method: 'eth_requestAccounts' }));
+
+    if (accounts.length === 0) {
+      console.error('No accounts found.');
+      alert('No accounts found. Please connect to MetaMask.');
+      return;
+    }
+
+    const account = accounts[0];
 
     console.log('Connected account:', account);
 
@@ -41,21 +49,17 @@ async function getConnectedAccount() {
     return null;
   }
 
-  let account = null;
-
   try {
     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
 
     if (accounts.length > 0) {
-      account = accounts[0];
-    } else {
-      console.log('No connected accounts found.');
+      return accounts[0];
     }
   } catch (error) {
     console.error('Error getting connected account:', error);
   }
 
-  return account;
+  return null;
 }
 
 async function checkAccountConnection() {
