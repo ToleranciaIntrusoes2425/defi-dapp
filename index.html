@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <title>Document</title>
-  
+
   <link rel="stylesheet" href="css/style.css">
 
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
@@ -15,13 +15,45 @@
 <body>
   <!-- Header -->
   <header>
+    <button onclick="connectMetaMask()" class="btn btn--connect">Connect</button>
+
+    <div class="wallet-address"></div>
   </header>
 
   <!-- Main content -->
   <main>
-    <button onclick="connectMetaMask()" class="btn btn--connect">Connect MetaMask</button>
+    <h1>Welcome</h1>
 
-    <div class="wallet-address">Wallet Address: </div>
+    <div class="exchange">
+      <form class="exchange__form" onsubmit="executeExchange(event)">
+        <div class="exchange__form__item exchange__form__item--from">
+          <label for="from-amount">From:</label>
+          <input type="number" name="from-amount" id="from-amount" required min="0">
+          <select onchange="switchExchangeTokens(event)" name="from-token" id="from-token">
+            <option value="ETH" selected>ETH</option>
+            <option value="TKZ">TKZ</option>
+          </select>
+        </div>
+
+        <div class="exchange__form__switch">
+          <button onclick="switchExchangeTokens()" class="btn btn--switch-exchange">Switch</button>
+        </div>
+
+        <div class="exchange__form__item exchange__form__item--to">
+          <label for="to-amount">To:</label>
+          <input type="number" name="to-amount" id="to-amount" required min="0">
+          <select onchange="switchExchangeTokens(event)" name="to-token" id="to-token">
+            <option value="ETH">ETH</option>
+            <option value="TKZ" selected>TKZ</option>
+          </select>
+        </div>
+
+        <div class="exchange__form__summary">
+        </div>
+
+        <button type="submit" class="btn btn--exchange">Exchange</button>
+      </form>
+    </div>
   </main>
 
   <!-- Footer -->
@@ -30,6 +62,7 @@
 
   <!-- Scripts -->
   <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/exchange.js"></script>
 </body>
 
 </html>

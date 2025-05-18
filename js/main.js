@@ -1,4 +1,5 @@
 import abi from "./abi.js";
+import './exchange.js';
 
 const contractAddress = '0xE44587809DDD06Af56d9795D41D645CFece42c03';
 
@@ -75,5 +76,4 @@ async function checkAccountConnection() {
 }
 
 window.connectMetaMask = connectMetaMask;
-
 window.addEventListener('load', checkAccountConnection);
