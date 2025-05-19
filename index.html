@@ -28,22 +28,22 @@
       <form class="exchange__form" onsubmit="executeExchange(event)">
         <div class="exchange__form__item exchange__form__item--from">
           <label for="from-amount">From:</label>
-          <input type="number" name="from-amount" id="from-amount" required min="0">
+          <input type="number" name="from-amount" id="from-amount" required min="0" onchange="updateExchangeRate(event)">
           <select onchange="switchExchangeTokens(event)" name="from-token" id="from-token">
-            <option value="ETH" selected>ETH</option>
+            <option value="Wei" selected>Wei</option>
             <option value="TKZ">TKZ</option>
           </select>
         </div>
 
         <div class="exchange__form__switch">
-          <button onclick="switchExchangeTokens()" class="btn btn--switch-exchange">Switch</button>
+          <button type="button" onclick="switchExchangeTokens()" class="btn btn--switch-exchange">Switch</button>
         </div>
 
         <div class="exchange__form__item exchange__form__item--to">
           <label for="to-amount">To:</label>
           <input type="number" name="to-amount" id="to-amount" required min="0">
           <select onchange="switchExchangeTokens(event)" name="to-token" id="to-token">
-            <option value="ETH">ETH</option>
+            <option value="Wei">Wei</option>
             <option value="TKZ" selected>TKZ</option>
           </select>
         </div>
