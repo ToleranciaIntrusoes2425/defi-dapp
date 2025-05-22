@@ -10,7 +10,7 @@ async function getFirstAvailableAccount() {
   }
 
   try {
-    const account = (await window.ethereum.request({ method: 'eth_accounts' }))[0];
+    const account = (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0];
     return account ?? null;
   } catch (error) {
     console.error('Error getting first available account:', error);
