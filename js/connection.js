@@ -13,7 +13,7 @@ function updateUI(account) {
   });
 
   Array.from(document.getElementsByClassName('wallet-address')).forEach(e => {
-    e.innerText += account;
+    e.innerText = account;
     e.style.display = 'block';
   });
 }
