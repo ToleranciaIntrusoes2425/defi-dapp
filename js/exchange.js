@@ -1,4 +1,4 @@
-import { contract, web3 } from "./connection.js";
+import { defiContract, web3 } from "./connection.js";
 import { getFirstConnectedAccount } from "./utils.js";
 
 function getTokenElements() {
@@ -37,7 +37,7 @@ async function updateExchangeRate(event) {
   // }
 
   try {
-    const tkzPrice = await contract.methods.dexSwapRate().call();
+    const tkzPrice = await defiContract.methods.dexSwapRate().call();
 
     let toAmount = 0;
     if (fromToken === 'TKZ') {
@@ -112,13 +112,13 @@ async function executeExchange(event) {
 
   try {
     if (fromToken === 'TKZ') {
-      await contract.methods.buyDex().send({
+      await defiContract.methods.buyDex().send({
         from: fromAddress,
         value: fromAmount,
       });
       console.log(`Bought ${fromAmount} TKZ for ${toAmount} Wei`);
     } else if (fromToken === 'Wei') {
-      await contract.methods.sellDex(toAmount).send({
+      await defiContract.methods.sellDex(toAmount).send({
         from: fromAddress,
       });
       console.log(`Sold ${toAmount} TKZ for ${fromAmount} Wei`);

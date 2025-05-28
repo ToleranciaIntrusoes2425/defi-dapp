@@ -1,10 +1,11 @@
-import abi from "./abi.js";
+import abiDefi from "./abi_defi.js";
+import abiNft from "./abi_nft.js";
+import { defiContractAddress, nftContractAddress } from "./constants.js";
 import { getFirstAvailableAccount, getFirstConnectedAccount } from "./utils.js";
 
-const contractAddress = '0x9cb6eA3311BCD6d8e863d90c94E4D890E1098C80';
-
 const web3 = new Web3(window.ethereum);
-const contract = new web3.eth.Contract(abi, contractAddress);
+const defiContract = new web3.eth.Contract(abiDefi, defiContractAddress);
+const nftContract = new web3.eth.Contract(abiNft, nftContractAddress);
 
 function updateUI(account) {
   Array.from(document.getElementsByClassName('btn--connect')).forEach(e => {
@@ -41,7 +42,8 @@ async function checkAccountConnection() {
 
 export {
   web3,
-  contract,
+  defiContract,
+  nftContract,
   connectMetaMask,
   checkAccountConnection,
 };
