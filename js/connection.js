@@ -8,13 +8,8 @@ const defiContract = new web3.eth.Contract(abiDefi, defiContractAddress);
 const nftContract = new web3.eth.Contract(abiNft, nftContractAddress);
 
 function updateUI(account) {
-  Array.from(document.getElementsByClassName('btn--connect')).forEach(e => {
-    e.style.display = 'none';
-  });
-
   Array.from(document.getElementsByClassName('wallet-address')).forEach(e => {
     e.innerText = account;
-    e.style.display = 'block';
   });
 }
 
