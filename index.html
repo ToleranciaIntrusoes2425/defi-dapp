@@ -1,78 +1,136 @@
 <!DOCTYPE html>
 <html lang="en" class="h-100">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Decentralized Finance</title>
-
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="h-100 d-flex flex-column bg-light">
   <!-- Header -->
   <header class="py-3 px-4 d-flex justify-content-between align-items-center bg-dark text-white">
-    <button onclick="connectMetaMask()" class="btn btn-outline-light">Connect</button>
-    <div class="wallet-address small">Not connected</div>
+    <button onclick="connectMetaMask()" class="btn btn-outline-light">Connect Wallet</button>
+    <div class="d-flex align-items-center gap-3">
+      <div class="wallet-balance d-flex gap-2">
+        <span class="dex-balance small">0 DEX</span>
+      </div>
+      <div class="wallet-address small">Not connected</div>
+    </div>
   </header>
 
   <!-- Main content -->
   <main class="container flex-grow-1 my-5">
-    <h1 class="text-center">Welcome</h1>
-
-    <div class="my-4 card p-4 shadow">
-      <form onsubmit="executeExchange(event)">
-        <div class="">
-          <div class="">
-            <label for="from-amount" class="form-label">From:</label>
-            <div class="input-group">
-              <input type="number" name="from-amount" id="from-amount" class="form-control" required min="0" onchange="updateExchangeRate(event)">
-              <select class="form-select" name="from-token" id="from-token" onchange="switchExchangeTokens(event)">
-                <option value="Wei" selected>Wei</option>
-                <option value="DEX">DEX</option>
-              </select>
-            </div>
+    <h1 class="text-center mb-4">Decentralized Finance Platform</h1>
+    
+    <div class="row">
+      <!-- Exchange Section -->
+      <div class="col-lg-6 mb-4">
+        <div class="card p-4 shadow">
+          <h3 class="mb-3">Token Exchange</h3>
+          <div class="mb-3">
+            <label class="form-label">Current Rate: 1 DEX = <span id="exchange-rate">0</span> Wei</label>
           </div>
-
-          <div class="mt-3 text-center">
-            <button type="button" onclick="switchExchangeTokens()" class="btn btn-secondary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-up" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M11.5 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L11 2.707V14.5a.5.5 0 0 0 .5.5m-7-14a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L4 13.293V1.5a.5.5 0 0 1 .5-.5"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="mt-3">
-            <label for="to-amount" class="form-label">To:</label>
-            <div class="input-group">
-              <input type="number" name="to-amount" id="to-amount" class="form-control" required min="0" onchange="updateExchangeRate(event)">
-              <select class="form-select" name="to-token" id="to-token" onchange="switchExchangeTokens(event)">
-                <option value="Wei">Wei</option>
-                <option value="DEX" selected>DEX</option>
-              </select>
+          <form onsubmit="executeExchange(event)">
+            <div class="mb-3">
+              <label for="from-amount" class="form-label">From:</label>
+              <div class="input-group">
+                <input type="number" id="from-amount" class="form-control" required min="0" step="0.0001" onchange="updateExchangeRate(event)">
+                <select class="form-select" id="from-token" onchange="switchExchangeTokens(event)">
+                  <option value="Wei" selected>ETH</option>
+                  <option value="DEX">DEX</option>
+                </select>
+              </div>
             </div>
+
+            <div class="my-3 text-center">
+              <button type="button" onclick="switchExchangeTokens()" class="btn btn-secondary btn-switch">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M11.5 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L11 2.707V14.5a.5.5 0 0 0 .5.5m-7-14a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L4 13.293V1.5a.5.5 0 0 1 .5-.5"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="mb-3">
+              <label for="to-amount" class="form-label">To:</label>
+              <div class="input-group">
+                <input type="number" id="to-amount" class="form-control" required min="0" step="0.0001">
+                <select class="form-select" id="to-token" onchange="switchExchangeTokens(event)">
+                  <option value="Wei">ETH</option>
+                  <option value="DEX" selected>DEX</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <button type="submit" class="btn btn-success btn-exchange">Exchange</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Loan Section -->
+      <div class="col-lg-6 mb-4">
+        <div class="card p-4 shadow">
+          <h3 class="mb-3">Loan Management</h3>
+          <div class="mb-3">
+            <button onclick="createLoan()" class="btn btn-primary w-100 mb-2">Create DEX Loan</button>
+            <button onclick="createNftLoan()" class="btn btn-primary w-100 mb-2">Create NFT Loan</button>
+            <button onclick="makePayment()" class="btn btn-warning w-100 mb-2">Make Payment</button>
+            <button onclick="terminateLoan()" class="btn btn-danger w-100">Terminate Loan</button>
+          </div>
+          <div id="loan-status" class="mt-3 p-3 border rounded">
+            <h5>Loan Status</h5>
+            <div id="active-loans"></div>
           </div>
         </div>
+      </div>
 
-        <div class="mt-3 text-center">
-          <button type="submit" class="btn btn-success">Exchange</button>
+      <!-- NFT Section -->
+      <div class="col-lg-6 mb-4">
+        <div class="card p-4 shadow">
+          <h3 class="mb-3">NFT Management</h3>
+          <div class="mb-3">
+            <input type="text" id="nft-uri" class="form-control mb-2" placeholder="NFT URI">
+            <button onclick="mintNft()" class="btn btn-primary w-100">Mint NFT</button>
+          </div>
+          <div id="nft-container" class="mt-3">
+            <h5>Your NFTs</h5>
+            <div class="nft-collection"></div>
+          </div>
         </div>
-      </form>
+      </div>
+
+      <!-- Lending Section -->
+      <div class="col-lg-6 mb-4">
+        <div class="card p-4 shadow">
+          <h3 class="mb-3">Lending Platform</h3>
+          <div id="available-loans" class="mb-3">
+            <h5>Available NFT Loans</h5>
+            <div class="loan-requests"></div>
+          </div>
+          <div class="mb-3">
+            <input type="number" id="loan-id" class="form-control mb-2" placeholder="Loan ID">
+            <button onclick="lendToNftLoan()" class="btn btn-success w-100">Lend to NFT Loan</button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
   <!-- Footer -->
   <footer class="text-center text-muted py-4">
-    &copy; 2025 Decentralized Finance
+    &copy; 2025 Decentralized Finance - DJ-FCUL
   </footer>
 
   <!-- Scripts -->
   <script type="module" src="js/main.js"></script>
   <script type="module" src="js/exchange.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.min.js" integrity="sha384-RuyvpeZCxMJCqVUGFI0Do1mQrods/hhxYlcVfGPOfQtPJh0JCw12tUAZ/Mv10S7D" crossorigin="anonymous"></script>
+  <script type="module" src="js/loan.js"></script>
+  <script type="module" src="js/nft.js"></script>
+  <script type="module" src="js/lending.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
