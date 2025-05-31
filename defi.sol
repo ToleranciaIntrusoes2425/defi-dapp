@@ -260,6 +260,15 @@ contract DecentralizedFinance is ERC20, Ownable {
     }
 
     function loanByNft(IERC721 nftContract, uint256 nftId) external {
+        uint256 id = getLoanIdByNft(nftContract, nftId);
+
+        Loan storage _loan = loans[id];
+
+        require(
+            _loan.lender == address(0),
+            "There's already a lender for that loan"
+        );
+
         // TODO: implement this
         // emit loanCreated(msg.sender, loanAmount, deadline);
     }
