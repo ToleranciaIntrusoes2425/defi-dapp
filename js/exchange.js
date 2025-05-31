@@ -1,4 +1,4 @@
-import { defiContract, web3 } from "./connection.js";
+import { defiContract } from "./connection.js";
 import { getFirstConnectedAccount } from "./utils.js";
 
 function getTokenElements() {
@@ -18,6 +18,13 @@ async function updateExchangeRate(event) {
     return;
   }
 
+  const target = event.target;
+
+  if (target.id !== 'from-token' && target.id !== 'to-token') {
+    console.error('Invalid event target:', target.id);
+    return;
+  }
+
   const { fromTokenElement, toTokenElement } = getTokenElements();
   const fromToken = fromTokenElement.value;
   const toToken = toTokenElement.value;
@@ -31,22 +38,34 @@ async function updateExchangeRate(event) {
   const fromAmount = fromAmountElement.value;
   const toAmount = toAmountElement.value;
 
-  // if (fromAmount <= 0 || toAmount <= 0) {
-  //   console.error('Invalid token amounts.');
-  //   return;
-  // }
+  if (fromAmount < 0 || toAmount < 0) { // TODO: Check if this is correct
+    console.error('Invalid token amounts:', fromAmount, toAmount);
+    return;
+  }
 
   try {
-    const tkzPrice = await defiContract.methods.dexSwapRate().call();
+    const dexPrice = await defiContract.methods.dexSwapRate().call();
 
-    let toAmount = 0;
-    if (fromToken === 'TKZ') {
-      toAmount = fromAmount * tkzPrice;
-    } else if (fromToken === 'Wei') {
-      toAmount = ~~(fromAmount / tkzPrice);
+    if (!dexPrice || isNaN(dexPrice)) {
+      console.error('Invalid exchange rate:', dexPrice);
+      return;
     }
 
-    toAmountElement.value = toAmount;
+    console.log(`Exchange rate: 1 DEX = ${dexPrice} Wei`);
+
+    if (target.id === 'from-token') {
+      if (fromToken === 'DEX') {
+        toAmountElement.value = fromAmount * dexPrice;
+      } else if (fromToken === 'Wei') {
+        toAmountElement.value = ~~(fromAmount / dexPrice);
+      }
+    } else if (target.id === 'to-token') {
+      if (toToken === 'DEX') {
+        fromAmountElement.value = toAmount / dexPrice;
+      } else if (toToken === 'Wei') {
+        fromAmountElement.value = ~~(toAmount * dexPrice);
+      }
+    }
   } catch (error) {
     console.error("Error updating exchange rate:", error);
   }
@@ -70,9 +89,9 @@ function switchExchangeTokens(event) {
     fromTokenElement.value = toToken;
     toTokenElement.value = fromToken;
   } else if (target.id === 'from-token') {
-    toTokenElement.value = toToken === 'TKZ' ? 'Wei' : 'TKZ';
+    toTokenElement.value = toToken === 'DEX' ? 'Wei' : 'DEX';
   } else if (target.id === 'to-token') {
-    fromTokenElement.value = fromToken === 'TKZ' ? 'Wei' : 'TKZ';
+    fromTokenElement.value = fromToken === 'DEX' ? 'Wei' : 'DEX';
   }
 
   fromAmountElement.value = toAmount;
@@ -111,17 +130,17 @@ async function executeExchange(event) {
   }
 
   try {
-    if (fromToken === 'TKZ') {
+    if (fromToken === 'DEX') {
+      await defiContract.methods.sellDex(toAmount).send({
+        from: fromAddress,
+      });
+      console.log(`Sold ${toAmount} DEX for ${fromAmount} Wei`);
+    } else if (fromToken === 'Wei') {
       await defiContract.methods.buyDex().send({
         from: fromAddress,
         value: fromAmount,
       });
-      console.log(`Bought ${fromAmount} TKZ for ${toAmount} Wei`);
-    } else if (fromToken === 'Wei') {
-      await defiContract.methods.sellDex(toAmount).send({
-        from: fromAddress,
-      });
-      console.log(`Sold ${toAmount} TKZ for ${fromAmount} Wei`);
+      console.log(`Bought ${fromAmount} DEX for ${toAmount} Wei`);
     }
   } catch (error) {
     console.error("Error setting price:", error);

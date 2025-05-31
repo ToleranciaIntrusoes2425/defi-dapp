@@ -8,17 +8,17 @@ const abiDefi = [
 			},
 			{
 				"internalType": "uint256",
-				"name": "periodicity_",
+				"name": "_periodicity",
 				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
-				"name": "interest_",
+				"name": "_interest",
 				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
-				"name": "termination_",
+				"name": "_termination",
 				"type": "uint256"
 			}
 		],
@@ -405,13 +405,19 @@ const abiDefi = [
 				"type": "uint256"
 			},
 			{
-				"internalType": "uint256",
+				"internalType": "uint64",
 				"name": "deadline",
-				"type": "uint256"
+				"type": "uint64"
 			}
 		],
 		"name": "loan",
-		"outputs": [],
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -451,14 +457,33 @@ const abiDefi = [
 				"type": "uint256"
 			},
 			{
-				"internalType": "uint256",
+				"internalType": "uint64",
 				"name": "deadline",
-				"type": "uint256"
+				"type": "uint64"
 			}
 		],
 		"name": "makeLoanRequestByNft",
-		"outputs": [],
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "makePayment",
+		"outputs": [],
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
@@ -524,19 +549,6 @@ const abiDefi = [
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "ethAmount",
-				"type": "uint256"
-			}
-		],
-		"name": "returnLoan",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
 				"name": "dexAmount",
 				"type": "uint256"
 			}
@@ -570,6 +582,19 @@ const abiDefi = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "terminateLoan",
+		"outputs": [],
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{

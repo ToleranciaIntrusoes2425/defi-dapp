@@ -38,5 +38,5 @@ async function getFirstConnectedAccount() {
 export {
   alertMetaMaskMissing,
   getFirstAvailableAccount,
-  getFirstConnectedAccount,
+  getFirstConnectedAccount
 };

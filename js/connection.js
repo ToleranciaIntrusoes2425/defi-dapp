@@ -36,9 +36,7 @@ async function checkAccountConnection() {
 }
 
 export {
-  web3,
-  defiContract,
-  nftContract,
-  connectMetaMask,
-  checkAccountConnection,
+  checkAccountConnection, connectMetaMask, defiContract,
+  nftContract, web3
 };
+
