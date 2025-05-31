@@ -20,7 +20,7 @@ async function updateExchangeRate(event) {
 
   const target = event.target;
 
-  if (target.id !== 'from-token' && target.id !== 'to-token') {
+  if (target.id !== 'from-amount' && target.id !== 'to-amount') {
     console.error('Invalid event target:', target.id);
     return;
   }
@@ -53,15 +53,15 @@ async function updateExchangeRate(event) {
 
     console.log(`Exchange rate: 1 DEX = ${dexPrice} Wei`);
 
-    if (target.id === 'from-token') {
+    if (target.id === 'from-amount') {
       if (fromToken === 'DEX') {
         toAmountElement.value = fromAmount * dexPrice;
       } else if (fromToken === 'Wei') {
         toAmountElement.value = ~~(fromAmount / dexPrice);
       }
-    } else if (target.id === 'to-token') {
+    } else if (target.id === 'to-amount') {
       if (toToken === 'DEX') {
-        fromAmountElement.value = toAmount / dexPrice;
+        fromAmountElement.value = toAmount * dexPrice;
       } else if (toToken === 'Wei') {
         fromAmountElement.value = ~~(toAmount * dexPrice);
       }
@@ -131,7 +131,7 @@ async function executeExchange(event) {
 
   try {
     if (fromToken === 'DEX') {
-      await defiContract.methods.sellDex(toAmount).send({
+      await defiContract.methods.sellDex(fromAmount).send({
         from: fromAddress,
       });
       console.log(`Sold ${toAmount} DEX for ${fromAmount} Wei`);
@@ -140,7 +140,7 @@ async function executeExchange(event) {
         from: fromAddress,
         value: fromAmount,
       });
-      console.log(`Bought ${fromAmount} DEX for ${toAmount} Wei`);
+      console.log(`Bought ${toAmount} DEX for ${fromAmount} Wei`);
     }
   } catch (error) {
     console.error("Error setting price:", error);
