@@ -1,151 +1,114 @@
-import { defiContract } from "./connection.js";
-import { getFirstConnectedAccount } from "./utils.js";
+import { defiContract, web3 } from './connection.js';
+import { getFirstConnectedAccount } from './utils.js';
 
 function getTokenElements() {
-  const fromTokenElement = document.getElementById('from-token');
-  const toTokenElement = document.getElementById('to-token');
-  return { fromTokenElement, toTokenElement };
+  return {
+    fromTokenElement: document.getElementById('from-token'),
+    toTokenElement: document.getElementById('to-token'),
+    fromAmountElement: document.getElementById('from-amount'),
+    toAmountElement: document.getElementById('to-amount')
+  };
 }
 
-function getAmountElements() {
-  const fromAmountElement = document.getElementById('from-amount');
-  const toAmountElement = document.getElementById('to-amount');
-  return { fromAmountElement, toAmountElement };
+async function updateSwapRate(){
+  const dexPrice = await defiContract.methods.dexSwapRate().call();
+  document.querySelector('#exchange-rate').textContent = dexPrice;
 }
 
 async function updateExchangeRate(event) {
-  if (!event || event.type !== 'change') {
-    return;
-  }
+  if (!event || event.type !== 'change') return;
 
   const target = event.target;
-
-  if (target.id !== 'from-amount' && target.id !== 'to-amount') {
-    console.error('Invalid event target:', target.id);
-    return;
-  }
-
-  const { fromTokenElement, toTokenElement } = getTokenElements();
+  const { fromTokenElement, toTokenElement, fromAmountElement, toAmountElement } = getTokenElements();
   const fromToken = fromTokenElement.value;
   const toToken = toTokenElement.value;
 
   if (fromToken === toToken) {
-    console.error('Cannot exchange the same token.');
+    alert('Cannot exchange the same token.');
     return;
   }
-
-  const { fromAmountElement, toAmountElement } = getAmountElements();
-  const fromAmount = fromAmountElement.value;
-  const toAmount = toAmountElement.value;
-
-  if (fromAmount < 0 || toAmount < 0) { // TODO: Check if this is correct
-    console.error('Invalid token amounts:', fromAmount, toAmount);
-    return;
-  }
+  
+  const dexPriceInWei  = await defiContract.methods.dexSwapRate().call();
+  const dexPrice = web3.utils.fromWei(dexPriceInWei, 'ether');
+  const fromAmount = parseFloat(fromAmountElement.value);
+  if (isNaN(fromAmount) || fromAmount <= 0) return;
 
   try {
-    const dexPrice = await defiContract.methods.dexSwapRate().call();
-
-    if (!dexPrice || isNaN(dexPrice)) {
-      console.error('Invalid exchange rate:', dexPrice);
-      return;
-    }
-
-    console.log(`Exchange rate: 1 DEX = ${dexPrice} Wei`);
-
-    if (target.id === 'from-amount') {
-      if (fromToken === 'DEX') {
-        toAmountElement.value = fromAmount * dexPrice;
-      } else if (fromToken === 'Wei') {
-        toAmountElement.value = ~~(fromAmount / dexPrice);
+    if (target.id === 'from-amount' || target.id === 'from-token') {
+      if (fromToken === 'DEX' && toToken === 'Wei') {
+        toAmountElement.value = (fromAmount * dexPrice).toFixed(4);
+      } else if (fromToken === 'Wei' && toToken === 'DEX') {
+        toAmountElement.value = (fromAmount / dexPrice).toFixed(4);
+      } else {
+        toAmountElement.value = '';
       }
-    } else if (target.id === 'to-amount') {
-      if (toToken === 'DEX') {
-        fromAmountElement.value = toAmount * dexPrice;
-      } else if (toToken === 'Wei') {
-        fromAmountElement.value = ~~(toAmount * dexPrice);
+    } else if (target.id === 'to-amount' || target.id === 'to-token') {
+      if (toToken === 'DEX' && fromToken === 'Wei') {
+        fromAmountElement.value = (parseFloat(toAmountElement.value) / dexPrice).toFixed(4);
+      } else if (toToken === 'Wei' && fromToken === 'DEX') {
+        fromAmountElement.value = (parseFloat(toAmountElement.value) * dexPrice).toFixed(4);
+      } else {
+        fromAmountElement.value = '';
       }
     }
   } catch (error) {
     console.error("Error updating exchange rate:", error);
+    alert('Error getting exchange rate: ' + error.message);
   }
 }
 
 function switchExchangeTokens(event) {
-  let target = null;
-  if (event && event.type === 'change') {
-    target = event.target;
-  }
-
-  const { fromTokenElement, toTokenElement } = getTokenElements();
-  const fromToken = fromTokenElement.value;
-  const toToken = toTokenElement.value;
-
-  const { fromAmountElement, toAmountElement } = getAmountElements();
-  const fromAmount = fromAmountElement.value;
-  const toAmount = toAmountElement.value;
-
-  if (!target) {
-    fromTokenElement.value = toToken;
-    toTokenElement.value = fromToken;
-  } else if (target.id === 'from-token') {
-    toTokenElement.value = toToken === 'DEX' ? 'Wei' : 'DEX';
-  } else if (target.id === 'to-token') {
-    fromTokenElement.value = fromToken === 'DEX' ? 'Wei' : 'DEX';
-  }
-
-  fromAmountElement.value = toAmount;
-  toAmountElement.value = fromAmount;
+  const { fromTokenElement, toTokenElement, fromAmountElement, toAmountElement } = getTokenElements();
+  
+  // Swap token selections
+  const temp = fromTokenElement.value;
+  fromTokenElement.value = toTokenElement.value;
+  toTokenElement.value = temp;
+  
+  // Swap amounts
+  const tempAmount = fromAmountElement.value;
+  fromAmountElement.value = toAmountElement.value;
+  toAmountElement.value = tempAmount;
 }
 
 async function executeExchange(event) {
-  console.log('Executing exchange...');
-
-  if (event) {
-    event.preventDefault();
-  }
-
-  const fromAddress = await getFirstConnectedAccount();
-  if (!fromAddress) {
-    console.error('No connected accounts found.');
+  event.preventDefault();
+  
+  const account = await getFirstConnectedAccount();
+  if (!account) {
+    alert('Please connect your wallet first');
     return;
   }
 
-  const { fromTokenElement, toTokenElement } = getTokenElements();
+  const { fromTokenElement, toTokenElement, fromAmountElement } = getTokenElements();
   const fromToken = fromTokenElement.value;
-  const toToken = toTokenElement.value;
-
-  if (fromToken === toToken) {
-    console.error('Cannot exchange the same token.');
-    return;
-  }
-
-  const { fromAmountElement, toAmountElement } = getAmountElements();
   const fromAmount = fromAmountElement.value;
-  const toAmount = toAmountElement.value;
 
-  if (fromAmount <= 0 || toAmount <= 0) {
-    console.error('Invalid token amounts.');
+  if (fromAmount <= 0) {
+    alert('Please enter a valid amount');
     return;
   }
 
   try {
     if (fromToken === 'DEX') {
-      await defiContract.methods.sellDex(fromAmount).send({
-        from: fromAddress,
+      await defiContract.methods.sellDex(web3.utils.toWei(fromAmount, 'ether')).send({
+        from: account
       });
-      console.log(`Sold ${toAmount} DEX for ${fromAmount} Wei`);
-    } else if (fromToken === 'Wei') {
+      alert(`Successfully sold ${fromAmount} DEX`);
+    } else {
       await defiContract.methods.buyDex().send({
-        from: fromAddress,
-        value: fromAmount,
+        from: account,
+        value: web3.utils.toWei(fromAmount, 'ether')
       });
-      console.log(`Bought ${toAmount} DEX for ${fromAmount} Wei`);
+      alert(`Successfully bought ${fromAmount} DEX`);
     }
+    
+    // Refresh balances
+    await updateBalances(account);
   } catch (error) {
-    console.error("Error setting price:", error);
+    console.error("Error executing exchange:", error);
+    alert('Error executing exchange: ' + error.message);
   }
 }
 
-export { executeExchange, switchExchangeTokens, updateExchangeRate };
-
+export { executeExchange, switchExchangeTokens, updateExchangeRate, updateSwapRate };

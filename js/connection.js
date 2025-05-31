@@ -11,7 +11,9 @@ async function updateBalances(account) {
   if (!account) return; 
   try {
     const dexBalance = await defiContract.methods.getDexBalance().call({ from: account });
-    document.querySelector('.dex-balance').textContent = dexBalance + " DEX";
+    const cBalance = await defiContract.methods.getBalance().call({ from: account });
+    document.querySelector('.dex-balance').textContent ="User Balance: " + dexBalance + " DEX";
+    document.querySelector('.contract-balance').textContent = "Contract Balance: " + cBalance + " Wei";
   } catch (error) {
     console.error("Error updating balances:", error);
   }
@@ -20,7 +22,7 @@ async function updateBalances(account) {
 function updateUI(account) {
   const walletAddressElements = document.getElementsByClassName('wallet-address');
   Array.from(walletAddressElements).forEach(e => {
-    e.innerText = account ? `${account.substring(0, 6)}...${account.substring(38)}` : 'Not connected';
+    e.innerText = account ? `${account.substring(0, 7)}...${account.substring(37)}` : 'Not connected';
   });
   
   if (account) {
