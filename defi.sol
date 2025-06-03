@@ -186,7 +186,7 @@ contract DecentralizedFinance is ERC20, Ownable {
         }
     }
 
-    function getBalance() external view onlyOwner returns (uint256) {
+    function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
 

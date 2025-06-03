@@ -1,4 +1,4 @@
-import { defiContract, web3 } from './connection.js';
+import { defiContract, web3, updateBalances } from './connection.js';
 import { getFirstConnectedAccount } from './utils.js';
 
 function getTokenElements() {

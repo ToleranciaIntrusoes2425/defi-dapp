@@ -2,6 +2,7 @@ import abiDefi from "./abi_defi.js";
 import abiNft from "./abi_nft.js";
 import { defiContractAddress, nftContractAddress } from "./constants.js";
 import { getFirstAvailableAccount, getFirstConnectedAccount } from "./utils.js";
+import { updateSwapRate } from "./exchange.js";
 
 const web3 = new Web3(window.ethereum);
 const defiContract = new web3.eth.Contract(abiDefi, defiContractAddress);
@@ -19,15 +20,59 @@ async function updateBalances(account) {
   }
 }
 
-function updateUI(account) {
+async function updateUI(account) {
   const walletAddressElements = document.getElementsByClassName('wallet-address');
   Array.from(walletAddressElements).forEach(e => {
     e.innerText = account ? `${account.substring(0, 7)}...${account.substring(37)}` : 'Not connected';
   });
-  
+
+  const owner = await defiContract.methods.owner().call();
+  if (owner.toLowerCase() === account.toLowerCase()) {
+    document.querySelector('.change-rate-text').innerHTML = `
+      <label><input type="text" id="rateInput"></label>
+      <label><button class="btn btn-primary" onclick="changeRate()">Change Rate</button></label>
+    `;
+  }
+  else{
+    document.querySelector('.change-rate-text').innerHTML = ``;
+  }
+
+  updateSwapRate();
+
   if (account) {
     updateBalances(account);
   }
+}
+
+async function changeRate() {
+  const rateValue = document.getElementById('rateInput').value;
+
+  const account = await getFirstAvailableAccount();
+  if (!account) {
+    alert('No account available');
+    return;
+  }
+
+  const parsedRate = parseFloat(rateValue);
+  if (isNaN(parsedRate) || parsedRate <= 0) {
+    alert("Please enter a valid rate");
+    return;
+  }
+
+  try {
+    console.log("New rate:", rateValue);
+
+    await defiContract.methods.setDexSwapRate(rateValue).send({
+      from: account
+    });
+
+    alert('Rate updated successfully!');
+  } catch (error) {
+    console.error("Error setting rate:", error);
+    alert('Failed to set rate: ' + error.message);
+  }
+
+  await updateUI(account);
 }
 
 async function connectMetaMask() {
@@ -67,5 +112,6 @@ export {
   defiContract,
   nftContract, 
   web3,
-  updateBalances
+  updateBalances,
+  changeRate
 };
