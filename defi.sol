@@ -172,8 +172,6 @@ contract DecentralizedFinance is ERC20, Ownable {
             return;
         }
 
-        require(block.timestamp <= _loan.deadline, "Loan expired");
-
         // if deadline is not a date:
         //     uint256 totalPayments = _loan.deadline / periodicity
         uint256 totalPayments = (_loan.deadline - _loan.start) / periodicity;
@@ -181,6 +179,12 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         uint256 interestPayment = (_loan.amount * interest) / 100;
         uint256 totalDue = interestPayment;
+
+        uint256 nextPaymentDue = _loan.start + (_loan.paymentsMade + 1) * periodicity;
+
+        require(
+            block.timestamp <= nextPaymentDue, 
+            "Loan expired or out of schedule");
 
         if (isFinalPayment) {
             totalDue += _loan.amount;
@@ -342,6 +346,16 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         Loan storage _loan = loans[loanId];
         require(block.timestamp > _loan.deadline, "Loan is still active");
+
+        // uint256 totalPayments = (_loan.deadline - _loan.start) / periodicity;
+        uint256 nextPaymentDue = _loan.start + (_loan.paymentsMade + 1) * periodicity;
+        bool missedPayment = block.timestamp > nextPaymentDue;
+
+        require(
+            block.timestamp > _loan.deadline || 
+            missedPayment,
+            "Loan is still active and on schedule"
+         );
 
         if (_loan.isBasedNft) {
             if (_loan.lender == address(0)) {
