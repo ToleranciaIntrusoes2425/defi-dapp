@@ -212,7 +212,7 @@ const abiDefi = [
 		],
 		"name": "loanByNft",
 		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{

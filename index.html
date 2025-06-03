@@ -80,7 +80,7 @@
         <div class="card p-4 shadow">
           <h3 class="mb-3">Loan Management</h3>
           <div class="mb-3">
-            <button onclick="createLoan()" class="btn btn-primary w-100 mb-2">Create DEX Loan</button>
+            <button data-bs-toggle="modal" data-bs-target="#meuModal" class="btn btn-primary w-100 mb-2">Create DEX Loan</button>
             <button onclick="createNftLoan()" class="btn btn-primary w-100 mb-2">Create NFT Loan</button>
             <button onclick="makePayment()" class="btn btn-warning w-100 mb-2">Make Payment</button>
             <button onclick="terminateLoan()" class="btn btn-danger w-100">Terminate Loan</button>
@@ -92,6 +92,34 @@
         </div>
       </div>
 
+      <!-- Modal -->
+      <div class="modal fade" id="meuModal" tabindex="-1" aria-labelledby="tituloModal" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <!-- Cabeçalho do modal -->
+            <div class="modal-header">
+              <h5 class="modal-title" id="tituloModal">Create DEX Loan</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <!-- Corpo do modal com o formulário -->
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="nome" class="form-label">Dex amount:</label>
+                <input type="number" class="form-control" id="Damount" required>
+              </div>
+              <div class="mb-3">
+                <label for="date" class="form-label">Deadline in days (max 28 days):</label>
+                <input type="number" class="form-control" id="deadline" required>
+              </div>
+              <button type="submit" class="btn btn-success" data-bs-dismiss="modal" onclick=createLoan()>Enviar</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      
       <!-- NFT Section -->
       <div class="col-lg-6 mb-4">
         <div class="card p-4 shadow">

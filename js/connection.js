@@ -29,7 +29,7 @@ async function updateUI(account) {
   const owner = await defiContract.methods.owner().call();
   if (owner.toLowerCase() === account.toLowerCase()) {
     document.querySelector('.change-rate-text').innerHTML = `
-      <label><input type="text" id="rateInput"></label>
+      <label><input type="number" id="rateInput" required></label>
       <label><button class="btn btn-primary" onclick="changeRate()">Change Rate</button></label>
     `;
   }
@@ -82,7 +82,6 @@ async function connectMetaMask() {
     return;
   }
 
-  console.log('Connected account:', account);
   updateUI(account);
 }
 

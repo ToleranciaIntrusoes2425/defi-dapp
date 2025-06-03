@@ -8,34 +8,34 @@ async function createLoan() {
     return;
   }
 
-  const dexAmount = prompt('Enter DEX amount to use as collateral:');
-  if (!dexAmount || isNaN(dexAmount)) {
-    alert('Please enter a valid amount');
+  const dexAmount = parseFloat(document.getElementById('Damount').value);
+  if (isNaN(dexAmount) || dexAmount <= 0) {
+    alert('Please enter a valid amount greater than 0');
     return;
   }
 
-  const days = prompt('Enter loan duration in days (max 28 days):');
-  if (!days || isNaN(days) || days > 28) {
-    alert('Please enter a valid duration (max 28 days)');
+  const days = parseInt(document.getElementById('deadline').value);
+  if (isNaN(days) || days <= 0 || days > 28) {
+    alert('Please enter a valid duration (1 to 28 days)');
     return;
   }
 
   try {
-    const dexAmountWei = web3.utils.toWei(dexAmount, 'ether');
-    const deadline = Math.floor(Date.now() / 1000) + (parseInt(days) * 86400);
-    
+    const dexAmountWei = dexAmount;
+    const deadline = Math.floor(Date.now() / 1000) + (days * 86400);
     await defiContract.methods.loan(dexAmountWei, deadline).send({
       from: account
     });
-    
+
     alert('Loan created successfully!');
     await updateBalances(account);
     await loadActiveLoans(account);
   } catch (error) {
     console.error("Error creating loan:", error);
-    alert('Error creating loan: ' + error.message);
+    alert('Error creating loan: ' + (error?.message ?? error));
   }
 }
+
 
 async function createNftLoan() {
   const account = await getFirstConnectedAccount();
@@ -208,20 +208,27 @@ async function checkAllLoans() {
 
 async function initLoanNotifications() {
   const owner = await defiContract.methods.owner().call();
-  const userAddress = await getFirstConnectedAccount();
 
-  if (userAddress?.toLowerCase() === owner?.toLowerCase()) {
-    defiContract.events.loanCreated({
-      fromBlock: 'latest'
-    })
-    .on('data', event => {
-      console.log('New loan:', event.returnValues);
-      alert(`New loan created by ${event.returnValues.borrower} for ${web3.utils.fromWei(event.returnValues.amount, 'ether')} ETH`);
-    })
-    .on('error', console.error);
-  }
+  defiContract.events.loanCreated({
+    fromBlock: 'latest'
+  })
+  .on('data', async (event) => {
+    const userAddress = await getFirstConnectedAccount();
+
+    if (userAddress?.toLowerCase() !== owner?.toLowerCase()) return;
+
+    console.log('New loan:', event.returnValues);
+    alert(`New loan created by ${event.returnValues.borrower} for ${web3.utils.fromWei(event.returnValues.amount, 'ether')} ETH`);
+  })
+  .on('error', async (error) => {
+    const userAddress = await getFirstConnectedAccount();
+    
+    if (userAddress?.toLowerCase() !== owner?.toLowerCase()) return;
+
+    console.error("Error in loanCreated event:", error);
+    alert('Error in loan notifications: ' + error.message);
+  });
 }
-
 export {
   initLoanNotifications,
   createLoan,

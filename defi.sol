@@ -21,6 +21,8 @@ contract DecentralizedFinance is ERC20, Ownable {
         address nftContract;
         uint64 deadline;
         bool isBasedNft;
+        uint256 startingTime;
+        uint256 paymentsMade;
     }
 
     // TODO: Review types & visibility modifiers (for optimization)
@@ -127,7 +129,9 @@ contract DecentralizedFinance is ERC20, Ownable {
             borrower: msg.sender,
             nftContract: address(0),
             deadline: deadline,
-            isBasedNft: false
+            isBasedNft: false,
+            startingTime: block.timestamp,
+            paymentsMade: 0
         });
 
         loanIdCounter.increment();
@@ -145,13 +149,41 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         Loan storage _loan = loans[loanId];
 
-        require(
-            _loan.borrower == msg.sender,
-            "You're not the borrower of that loan"
-        );
+        require(_loan.borrower == msg.sender,"You're not the borrower of that loan");
         require(_loan.lender != address(0), "There's no lender for that loan");
+        require(block.timestamp <= _loan.deadline, "Loan expired");
 
-        // TODO: Implement this
+        // if deadline is not a date:
+        //     uint256 totalPayments = _loan.deadline / periodicity
+        uint256 totalPayments = (_loan.deadline - _loan.startingTime) / periodicity;
+        bool isFinalPayment = (_loan.paymentsMade + 1 >= totalPayments);
+
+        uint256 interestPayment = (_loan.amount * interest) / 100;
+        uint256 totalDue = interestPayment;
+
+        if (isFinalPayment) {
+            totalDue += _loan.amount;
+        }
+
+        require(msg.value >= totalDue, "Not enough ETH");
+
+        if (_loan.lender != address(this)) {
+            payable(_loan.lender).transfer(totalDue);
+        }
+
+        if (msg.value > totalDue) {
+            payable(msg.sender).transfer(msg.value - totalDue);
+        }
+
+        _loan.paymentsMade += 1;
+
+        if (isFinalPayment) {
+            if (_loan.isBasedNft) {
+                IERC721(_loan.nftContract).safeTransferFrom(address(this), _loan.borrower, _loan.nftId);
+                delete nftToLoanId[_loan.nftContract][_loan.nftId];
+            }
+            delete loans[loanId];
+        }
     }
 
     function terminateLoan(uint256 loanId) external payable {
@@ -169,7 +201,9 @@ contract DecentralizedFinance is ERC20, Ownable {
         );
         require(_loan.lender != address(0), "There's no lender for that loan");
 
-        uint256 weiTerminationAmount = _loan.amount * (1 + termination);
+
+        uint256 terminationFee = (_loan.amount * termination) / 100;
+        uint256 weiTerminationAmount = (_loan.amount + terminationFee);
 
         require(
             msg.value >= weiTerminationAmount,
@@ -226,7 +260,9 @@ contract DecentralizedFinance is ERC20, Ownable {
             borrower: msg.sender,
             nftContract: nftContractAddress,
             deadline: deadline,
-            isBasedNft: false
+            isBasedNft: false,
+            startingTime: block.timestamp,
+            paymentsMade: 0
         });
         nftToLoanId[nftContractAddress][nftId] = id;
 
@@ -259,23 +295,34 @@ contract DecentralizedFinance is ERC20, Ownable {
         nftContract.transferFrom(address(this), msg.sender, nftId);
     }
 
-    function loanByNft(IERC721 nftContract, uint256 nftId) external {
+    function loanByNft(IERC721 nftContract, uint256 nftId) external payable {
         uint256 id = getLoanIdByNft(nftContract, nftId);
-
         Loan storage _loan = loans[id];
 
-        require(
-            _loan.lender == address(0),
-            "There's already a lender for that loan"
-        );
+        require(_loan.borrower != address(0), "Loan does not exist");
+        require(_loan.lender == address(0), "There's already a lender for that loan");
+        require(msg.value == _loan.amount, "Incorrect ETH amount sent");
 
-        // TODO: implement this
-        // emit loanCreated(msg.sender, loanAmount, deadline);
+        _loan.lender = msg.sender;
+        _loan.isBasedNft = true;
+
+        payable(_loan.borrower).transfer(_loan.amount);
+
+        emit loanCreated(_loan.borrower, _loan.amount, _loan.deadline);
     }
 
     function checkLoan(uint256 loanId) external onlyOwner {
         require(loanId < loanIdCounter.current(), "Loan does not exist");
-        // TODO: Implement this
+        
+        Loan storage _loan = loans[loanId];
+        require(block.timestamp > _loan.deadline, "Loan is still active");
+
+        if (_loan.isBasedNft && _loan.lender != address(0)) {
+            IERC721(_loan.nftContract).safeTransferFrom(address(this), _loan.lender, _loan.nftId);
+        }
+
+        delete nftToLoanId[_loan.nftContract][_loan.nftId];
+        delete loans[loanId];
     }
 
     function getLoanIdByNft(IERC721 nftContract, uint256 nftId)
