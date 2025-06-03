@@ -155,7 +155,17 @@ contract DecentralizedFinance is ERC20, Ownable {
         );
         require(_loan.lender != address(0), "There's no lender for that loan");
 
-        if (block.timestamp > _loan.deadline) {
+        uint256 totalPayments = (_loan.deadline - _loan.start) / periodicity;
+        bool isFinalPayment = (_loan.paymentsMade + 1 >= totalPayments);
+
+        uint256 interestPayment = (_loan.amount * interest) / 100;
+        uint256 totalDue = interestPayment;
+
+        uint256 nextPaymentDue = _loan.start +
+            (_loan.paymentsMade + 1) *
+            periodicity;
+
+        if (block.timestamp <= nextPaymentDue) {
             if (_loan.isBasedNft) {
                 IERC721(_loan.nftContract).transferFrom(
                     address(this),
@@ -171,16 +181,6 @@ contract DecentralizedFinance is ERC20, Ownable {
             payable(msg.sender).transfer(msg.value);
             return;
         }
-
-        require(block.timestamp <= _loan.deadline, "Loan expired");
-
-        // if deadline is not a date:
-        //     uint256 totalPayments = _loan.deadline / periodicity
-        uint256 totalPayments = (_loan.deadline - _loan.start) / periodicity;
-        bool isFinalPayment = (_loan.paymentsMade + 1 >= totalPayments);
-
-        uint256 interestPayment = (_loan.amount * interest) / 100;
-        uint256 totalDue = interestPayment;
 
         if (isFinalPayment) {
             totalDue += _loan.amount;
@@ -341,7 +341,16 @@ contract DecentralizedFinance is ERC20, Ownable {
         require(loanId < loanIdCounter.current(), "Loan does not exist");
 
         Loan storage _loan = loans[loanId];
-        require(block.timestamp > _loan.deadline, "Loan is still active");
+
+        uint256 nextPaymentDue = _loan.start +
+            (_loan.paymentsMade + 1) *
+            periodicity;
+
+        require(
+            block.timestamp > _loan.deadline ||
+                block.timestamp > nextPaymentDue,
+            "Loan is still active and on schedule"
+        );
 
         if (_loan.isBasedNft) {
             if (_loan.lender == address(0)) {

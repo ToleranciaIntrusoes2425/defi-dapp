@@ -245,3 +245,6 @@ states/
 
 # Custom
 .deps
+.states
+.prettierrc.json
+!blockchain/*
