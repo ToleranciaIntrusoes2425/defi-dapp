@@ -1,5 +1,5 @@
-const defiContractAddress = '0xA0Cc479d36051e8eD7663688a869CDa33c03d4c1';
-const nftContractAddress = '0x593c7cB3B5388f3e3c4F18779ADe69Ec5870945C';
+const defiContractAddress = '0xcf7AC6F4460F7d9340df689800325C22b5fb8Def';
+const nftContractAddress = '0x093a5F93B503C8DeE86b0D324c533c3034108f2B';
 
 export {
   defiContractAddress,

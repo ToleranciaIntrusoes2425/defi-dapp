@@ -1,5 +1,7 @@
 import { defiContract, nftContract, web3, updateBalances } from './connection.js';
 import { getFirstConnectedAccount } from './utils.js';
+import { defiContractAddress, nftContractAddress } from './constants.js'
+import { displayOwnedNFTs } from './nft.js'
 
 async function createLoan() {
   const account = await getFirstConnectedAccount();
@@ -63,25 +65,22 @@ async function createNftLoan() {
   }
 
   try {
-    const loanAmountWei = web3.utils.toWei(loanAmount, 'ether');
     const deadline = Math.floor(Date.now() / 1000) + (parseInt(days) * 86400);
-    
-    await defiContract.methods.makeLoanRequestByNft(
-      nftContract.options.address,
-      nftId,
-      loanAmountWei,
-      deadline
-    ).send({
-      from: account
-    });
-    
+    const loanAmountWei = web3.utils.toWei(loanAmount, "ether");
+
+    await nftContract.methods.approve(defiContractAddress, nftId).send({ from: account });
+
+    await defiContract.methods.makeLoanRequestByNft(nftContractAddress, nftId, loanAmountWei, deadline)
+      .send({ from: account });
+
+    await displayOwnedNFTs(account);
     alert('NFT Loan request created successfully!');
-    await loadAvailableLoans();
   } catch (error) {
     console.error("Error creating NFT loan:", error);
     alert('Error creating NFT loan: ' + error.message);
   }
 }
+
 
 async function makePayment() {
   const account = await getFirstConnectedAccount();
@@ -171,10 +170,8 @@ async function loadActiveLoans(account) {
 
     activeLoansContainer.innerHTML = '';
     
-    // In a real implementation, you would track loan IDs or iterate through them
-    // This is simplified for demonstration
-    const loanCount = await defiContract.methods.loanIdCounter().call();
-    
+    const loanCount = await defiContract.methods.loans().call().size();
+    console.log(loanCount)
     for (let i = 0; i < loanCount; i++) {
       const loan = await defiContract.methods.loans(i).call();
       if (loan.borrower.toLowerCase() === account.toLowerCase()) {
@@ -229,6 +226,7 @@ async function initLoanNotifications() {
     alert('Error in loan notifications: ' + error.message);
   });
 }
+
 export {
   initLoanNotifications,
   createLoan,

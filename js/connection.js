@@ -3,6 +3,8 @@ import abiNft from "./abi_nft.js";
 import { defiContractAddress, nftContractAddress } from "./constants.js";
 import { getFirstAvailableAccount, getFirstConnectedAccount } from "./utils.js";
 import { updateSwapRate } from "./exchange.js";
+import { displayOwnedNFTs } from "./nft.js";
+import { loadActiveLoans } from "./loan.js";
 
 const web3 = new Web3(window.ethereum);
 const defiContract = new web3.eth.Contract(abiDefi, defiContractAddress);
@@ -40,7 +42,9 @@ async function updateUI(account) {
   updateSwapRate();
 
   if (account) {
+    loadActiveLoans(account)
     updateBalances(account);
+    displayOwnedNFTs(account);
   }
 }
 

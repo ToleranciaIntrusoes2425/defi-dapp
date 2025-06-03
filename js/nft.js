@@ -31,30 +31,30 @@ async function mintNft() {
 
 async function displayOwnedNFTs(account) {
   try {
-    const balance = await nftContract.methods.balanceOf(account).call();
+    const tokenIds = await nftContract.methods.tokensOfOwner(account).call();
     const nftCollection = document.querySelector('.nft-collection');
-    
     if (!nftCollection) return;
-    
+
     nftCollection.innerHTML = '';
-    
-    if (balance === '0') {
+
+    if (tokenIds.length === 0) {
       nftCollection.innerHTML = '<p>No NFTs owned</p>';
       return;
     }
 
-    for (let i = 0; i < balance; i++) {
-      const tokenId = await nftContract.methods.tokenOfOwnerByIndex(account, i).call();
+    for (const tokenId of tokenIds) {
       const tokenURI = await nftContract.methods.tokenURI(tokenId).call();
-      
-      const nftElement = document.createElement('div');
-      nftElement.className = 'nft-item mb-3 p-3 border rounded';
-      nftElement.innerHTML = `
-        <p><strong>NFT ID:</strong> ${tokenId}</p>
-        <p><strong>URI:</strong> ${tokenURI.substring(0, 30)}...</p>
-        <button onclick="viewNftDetails(${tokenId})" class="btn btn-sm btn-info">View Details</button>
-      `;
-      nftCollection.appendChild(nftElement);
+      const owner = await nftContract.methods.ownerOf(tokenId).call();
+      if (owner.toLowerCase() === account.toLowerCase()) {
+        const nftElement = document.createElement('div');
+        nftElement.className = 'nft-item mb-3 p-3 border rounded';
+        nftElement.innerHTML = `
+          <p><strong>NFT ID:</strong> ${tokenId}</p>
+          <p><strong>URI:</strong> ${tokenURI.substring(0, 50)}...</p>
+          <button onclick="viewNftDetails(${tokenId})" class="btn btn-sm btn-info">View Details</button>
+        `;
+        nftCollection.appendChild(nftElement);
+      }
     }
   } catch (error) {
     console.error("Error fetching NFTs:", error);
@@ -64,19 +64,13 @@ async function displayOwnedNFTs(account) {
 async function viewNftDetails(tokenId) {
   try {
     const tokenURI = await nftContract.methods.tokenURI(tokenId).call();
-    alert(`NFT Details:\nID: ${tokenId}\nURI: ${tokenURI}`);
+    alert(`NFT ID: ${tokenId}\nURI: ${tokenURI}`);
+    console.log(tokenURI)
   } catch (error) {
-    console.error("Error fetching NFT details:", error);
+    console.error("Erro ao obter detalhes do NFT:", error);
+    alert("Error obtaining details of the NFT.");
   }
 }
-
-// Initialize NFT display when page loads
-window.addEventListener('load', async () => {
-  const account = await getFirstConnectedAccount();
-  if (account) {
-    await displayOwnedNFTs(account);
-  }
-});
 
 window.mintNft = mintNft;
 window.viewNftDetails = viewNftDetails;

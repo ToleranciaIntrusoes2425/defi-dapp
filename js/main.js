@@ -1,6 +1,6 @@
 import { checkAccountConnection, connectMetaMask, changeRate, } from './connection.js';
 import { executeExchange, switchExchangeTokens, updateExchangeRate, updateSwapRate } from './exchange.js';
-import { initLoanNotifications, createLoan } from './loan.js';
+import { initLoanNotifications, createLoan, createNftLoan } from './loan.js';
 
 window.connectMetaMask = connectMetaMask;
 window.addEventListener('load', async () => {
@@ -9,6 +9,7 @@ window.addEventListener('load', async () => {
   await updateSwapRate();
 });
 
+window.createNftLoan = createNftLoan;
 window.createLoan = createLoan;
 window.changeRate = changeRate;
 window.updateExchangeRate = updateExchangeRate;

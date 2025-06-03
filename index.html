@@ -120,6 +120,17 @@
         </div>
       </div>
       
+      <!-- Modal -->
+      <div id="nftModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
+        <div style="background:#fff; margin:10% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px; border-radius:8px; position:relative;">
+          <span onclick="closeNftModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
+          <h2 id="modalNftName">NFT Name</h2>
+          <img id="modalNftImage" src="" alt="NFT Image" style="width:100%; border-radius:8px;"/>
+          <p id="modalNftDescription"></p>
+        </div>
+      </div>
+
+
       <!-- NFT Section -->
       <div class="col-lg-6 mb-4">
         <div class="card p-4 shadow">
