@@ -11,6 +11,7 @@ async function getFirstAvailableAccount() {
 
   try {
     const account = (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0];
+    cpnsole.log((await window.ethereum.request({ method: 'eth_requestAccounts' }))[0])
     return account ?? null;
   } catch (error) {
     console.error('Error getting first available account:', error);
@@ -27,6 +28,7 @@ async function getFirstConnectedAccount() {
 
   try {
     const account = (await window.ethereum.request({ method: 'eth_accounts' }))[0];
+    console.log(await window.ethereum.request({ method: 'eth_accounts' }));
     return account ?? null;
   } catch (error) {
     console.error('Error getting first connected account:', error);
