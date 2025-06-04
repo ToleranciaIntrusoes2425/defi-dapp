@@ -272,13 +272,10 @@ async function checkAllLoans() {
       console.log(`  missedPayment: ${missedPayment}`);
 
       if (isExpired || missedPayment) {
+        showAlert("Payment deadline missed. Loan will be deleted.", "danger");
         console.log(`  Attempting to check and close loan ${i}...`);
         try {
           await defiContract.methods.checkLoan(i).send({ from: account });
-          await loadActiveLoans(account);
-          await loadAvailableLoans(account);
-          await displayOwnedNFTs(account);
-          await loadActiveLendings(account);
           console.log(`Loan ${i} checked and closed`)
           console.log(`Loan ${i} checked`);
         } catch (error) {
@@ -288,9 +285,18 @@ async function checkAllLoans() {
         console.log(`Loan ${i} is still active`);
       }
     }
+    await loadActiveLoans(account);
+    await loadAvailableLoans(account);
+    await displayOwnedNFTs(account);
+    await loadActiveLendings(account);
     console.log('All loans checked');
   } catch (error) {
+    await loadActiveLoans(account);
+    await loadAvailableLoans(account);
+    await displayOwnedNFTs(account);
+    await loadActiveLendings(account);
     console.error("Error checking loans:", error);
+    
   }
 }
 
