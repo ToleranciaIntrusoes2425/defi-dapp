@@ -47,9 +47,11 @@ async function updateUI(account) {
       <label><input type="number" id="rateInput" class="form-control" required min="0" step="1"></label>
       <label><button type="button" class="btn btn-primary" onclick="changeRate()">Change Rate</button></label>
     `;
+    document.getElementById('check-all-loans').style.display = 'block';
   }
   else {
     document.querySelector('.change-rate-text').innerHTML = ``;
+    document.getElementById('check-all-loans').style.display = 'none';
   }
 
   await updateSwapRate();

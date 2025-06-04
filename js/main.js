@@ -1,7 +1,7 @@
 import { changeRate, checkAccountConnection, connectMetaMask, updateUI } from './connection.js';
 import { executeExchange, switchExchangeTokens, updateExchangeRate, updateSwapRate } from './exchange.js';
 import { lendToNftLoan } from './lending.js';
-import { createLoan, createNftLoan, initLoanNotifications, makePayment, populateLoanRates, terminateLoan } from './loan.js';
+import { cancelNftLoan, checkAllLoans, createLoan, createNftLoan, initLoanNotifications, makePayment, populateLoanRates, terminateLoan } from './loan.js';
 import { mintNft, viewNftDetails } from './nft.js';
 
 
@@ -12,6 +12,10 @@ if (document.readyState === 'complete') {
     await initLoanNotifications();
     await updateSwapRate();
     await populateLoanRates();
+    
+    setInterval(async () => {
+      await checkAllLoans();
+    }, 10 * 60 * 1000);
   })();
 } else {
   document.addEventListener('DOMContentLoaded', async () => {
@@ -20,6 +24,10 @@ if (document.readyState === 'complete') {
     await initLoanNotifications();
     await updateSwapRate();
     await populateLoanRates();
+
+    setInterval(async () => {
+      await checkAllLoans();
+    }, 10 * 60 * 1000);
   });
 }
 
@@ -39,3 +47,5 @@ window.viewNftDetails = viewNftDetails;
 window.makePayment = makePayment;
 window.terminateLoan = terminateLoan;
 window.lendToNftLoan = lendToNftLoan;
+window.checkAllLoans = checkAllLoans;
+window.cancelNftLoan = cancelNftLoan;
