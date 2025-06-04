@@ -21,6 +21,10 @@ if (document.readyState === 'complete') {
   });
 }
 
+document.addEventListener("DOMContentLoaded", async () => {
+  document.querySelector(".wallet-connect-btn")?.addEventListener("click", connectMetaMask);
+});
+
 window.ethereum.on('accountsChanged', (_) => {
   window.location.reload();
 });
