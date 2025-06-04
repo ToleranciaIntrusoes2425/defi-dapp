@@ -11,7 +11,7 @@ contract SimpleNFT is ERC721URIStorage, Ownable {
     uint256 public mintPrice = 1000 wei;
     Counters.Counter public tokenIdCounter;
 
-    mapping(address => uint256[]) public ownedTokens;
+    mapping(address => uint256[]) private _ownedTokens;
 
     constructor() payable ERC721("Simple NFT", "SNFT") Ownable(msg.sender) {}
 
@@ -24,10 +24,14 @@ contract SimpleNFT is ERC721URIStorage, Ownable {
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, tokenURI);
 
-        ownedTokens[msg.sender].push(tokenId);
+        _ownedTokens[msg.sender].push(tokenId);
     }
 
     function setMintPrice(uint256 newPrice) external onlyOwner {
         mintPrice = newPrice;
+    }
+
+    function ownedTokens(address account) external view returns (uint256[] memory) {
+        return _ownedTokens[account];
     }
 }

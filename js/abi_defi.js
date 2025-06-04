@@ -440,6 +440,19 @@ const abiDefi = [
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "loanIdCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "_value",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -492,6 +505,11 @@ const abiDefi = [
 			{
 				"internalType": "bool",
 				"name": "isBasedNft",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "isActive",
 				"type": "bool"
 			}
 		],

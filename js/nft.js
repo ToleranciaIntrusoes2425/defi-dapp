@@ -1,16 +1,16 @@
-import { nftContract, web3, updateBalances } from './connection.js';
-import { getFirstConnectedAccount } from './utils.js';
+import { nftContract, updateBalances, web3 } from './connection.js';
+import { getFirstConnectedAccount, showAlert } from './utils.js';
 
 async function mintNft() {
   const tokenURI = document.getElementById('nft-uri').value;
   if (!tokenURI) {
-    alert('Please enter a valid token URI');
+    // alert('Please enter a valid token URI');
     return;
   }
 
   const account = await getFirstConnectedAccount();
   if (!account) {
-    alert('Please connect your wallet first');
+    // alert('Please connect your wallet first');
     return;
   }
 
@@ -20,12 +20,15 @@ async function mintNft() {
       from: account,
       value: mintPrice
     });
-    alert('NFT minted successfully!');
+    // alert('NFT minted successfully!');
+
+    showAlert('NFT minted successfully!', 'success');
     await displayOwnedNFTs(account);
     await updateBalances(account);
   } catch (error) {
     console.error("Error minting NFT:", error);
-    alert('Error minting NFT: ' + error.message);
+    showAlert('Error minting NFT: ' + error.message, 'danger');
+    // alert('Error minting NFT: ' + error.message);
   }
 }
 
@@ -43,15 +46,25 @@ async function displayOwnedNFTs(account) {
     }
 
     for (const tokenId of tokenIds) {
-      const tokenURI = await nftContract.methods.tokenURI(tokenId).call();
-      const owner = await nftContract.methods.ownerOf(tokenId).call();
+      const tokenIdValue = parseInt(tokenId, 10);
+      if (isNaN(tokenIdValue)) continue;
+
+      console.log(`Fetching details for NFT ID: ${tokenIdValue}`);
+      console.log(typeof tokenIdValue);
+
+      const isGanache = (await web3.eth.getChainId()) == 1337;
+
+      const tokenURI = isGanache
+        ? 'Not available on Ganache'
+        : await nftContract.methods.tokenURI(tokenIdValue).call();
+      const owner = await nftContract.methods.ownerOf(tokenIdValue).call();
       if (owner.toLowerCase() === account.toLowerCase()) {
         const nftElement = document.createElement('div');
-        nftElement.className = 'nft-item mb-3 p-3 border rounded';
+        nftElement.className = 'nft-item mb-3 p-3 border border-2 rounded';
         nftElement.innerHTML = `
-          <p><strong>NFT ID:</strong> ${tokenId}</p>
-          <p><strong>URI:</strong> ${tokenURI.substring(0, 50)}...</p>
-          <button onclick="viewNftDetails(${tokenId})" class="btn btn-sm btn-info">View Details</button>
+          <p><strong>NFT ID:</strong> ${tokenIdValue}</p>
+          <p><strong>URI:</strong> ${isGanache ? tokenURI : tokenURI.substring(0, 50) + "..."}</p>
+          <button onclick="viewNftDetails(${tokenIdValue})" class="btn btn-sm btn-secondary">View Details</button>
         `;
         nftCollection.appendChild(nftElement);
       }
@@ -63,16 +76,17 @@ async function displayOwnedNFTs(account) {
 
 async function viewNftDetails(tokenId) {
   try {
-    const tokenURI = await nftContract.methods.tokenURI(tokenId).call();
+    const isGanache = (await web3.eth.getChainId()) == 1337;
+    const tokenURI = isGanache
+      ? 'Not available on Ganache'
+      : await nftContract.methods.tokenURI(tokenIdValue).call();
     alert(`NFT ID: ${tokenId}\nURI: ${tokenURI}`);
     console.log(tokenURI)
   } catch (error) {
     console.error("Erro ao obter detalhes do NFT:", error);
-    alert("Error obtaining details of the NFT.");
+    showAlert('Error fetching NFT details', 'danger');
   }
 }
 
-window.mintNft = mintNft;
-window.viewNftDetails = viewNftDetails;
+export { displayOwnedNFTs, mintNft, viewNftDetails };
 
-export { displayOwnedNFTs };

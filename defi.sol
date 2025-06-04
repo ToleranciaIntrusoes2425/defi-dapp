@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 contract DecentralizedFinance is ERC20, Ownable {
     using Counters for Counters.Counter;
 
-    Counters.Counter private loanIdCounter;
+    Counters.Counter public loanIdCounter;
 
     // TODO: Review types (for optimization)
     struct Loan {
@@ -23,6 +23,7 @@ contract DecentralizedFinance is ERC20, Ownable {
         uint64 deadline;
         uint8 paymentsMade;
         bool isBasedNft;
+        bool isActive;
     }
 
     // TODO: Review types & visibility modifiers (for optimization)
@@ -125,13 +126,14 @@ contract DecentralizedFinance is ERC20, Ownable {
         loans[id] = Loan({
             amount: weiAmount,
             nftId: 0,
-            lender: address(this),
+            start: block.timestamp,
             borrower: msg.sender,
             nftContract: address(0),
             deadline: deadline,
+            lender: address(this),
+            paymentsMade: 0,
             isBasedNft: false,
-            start: block.timestamp,
-            paymentsMade: 0
+            isActive: true
         });
 
         loanIdCounter.increment();
@@ -145,10 +147,11 @@ contract DecentralizedFinance is ERC20, Ownable {
     }
 
     function makePayment(uint256 loanId) external payable {
-        require(loanId < loanIdCounter.current(), "Loan does not exist");
+        require(loanId < loanIdCounter.current(), "Loan not found");
 
         Loan storage _loan = loans[loanId];
 
+        require(_loan.isActive, "Loan not found");
         require(
             _loan.borrower == msg.sender,
             "You're not the borrower of that loan"
@@ -165,7 +168,7 @@ contract DecentralizedFinance is ERC20, Ownable {
             (_loan.paymentsMade + 1) *
             periodicity;
 
-        if (block.timestamp <= nextPaymentDue) {
+        if (block.timestamp > nextPaymentDue) {
             if (_loan.isBasedNft) {
                 IERC721(_loan.nftContract).transferFrom(
                     address(this),
@@ -213,10 +216,11 @@ contract DecentralizedFinance is ERC20, Ownable {
     }
 
     function terminateLoan(uint256 loanId) external payable {
-        require(loanId < loanIdCounter.current(), "Loan does not exist");
+        require(loanId < loanIdCounter.current(), "Loan not found");
 
         Loan storage _loan = loans[loanId];
 
+        require(_loan.isActive, "Loan not found");
         require(
             _loan.borrower == msg.sender,
             "You're not the borrower of that loan"
@@ -243,6 +247,17 @@ contract DecentralizedFinance is ERC20, Ownable {
         if (_loan.lender != address(this)) {
             payable(_loan.lender).transfer(weiTerminationAmount);
         }
+
+        if (_loan.isBasedNft) {
+            IERC721(_loan.nftContract).transferFrom(
+                address(this),
+                _loan.borrower,
+                _loan.nftId
+            );
+
+            delete nftToLoanId[_loan.nftContract][_loan.nftId];
+        }
+        delete loans[loanId];
     }
 
     function getBalance() external view returns (uint256) {
@@ -281,14 +296,16 @@ contract DecentralizedFinance is ERC20, Ownable {
         loans[id] = Loan({
             amount: loanAmount,
             nftId: nftId,
-            lender: address(0),
+            start: block.timestamp,
             borrower: msg.sender,
             nftContract: nftContractAddress,
             deadline: deadline,
+            lender: address(0),
+            paymentsMade: 0,
             isBasedNft: true,
-            start: block.timestamp,
-            paymentsMade: 0
+            isActive: true
         });
+
         nftToLoanId[nftContractAddress][nftId] = id;
 
         loanIdCounter.increment();
@@ -305,6 +322,7 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         Loan storage _loan = loans[id];
 
+        require(_loan.isActive, "Loan not found");
         require(
             _loan.borrower == msg.sender,
             "You're not the borrower of that loan"
@@ -324,6 +342,7 @@ contract DecentralizedFinance is ERC20, Ownable {
         uint256 id = getLoanIdByNft(nftContract, nftId);
         Loan storage _loan = loans[id];
 
+        require(_loan.isActive, "Loan not found");
         require(
             _loan.lender == address(0),
             "There's already a lender for that loan"
@@ -341,6 +360,8 @@ contract DecentralizedFinance is ERC20, Ownable {
         require(loanId < loanIdCounter.current(), "Loan does not exist");
 
         Loan storage _loan = loans[loanId];
+
+        require(_loan.isActive, "Loan not found");
 
         uint256 nextPaymentDue = _loan.start +
             (_loan.paymentsMade + 1) *
@@ -384,6 +405,7 @@ contract DecentralizedFinance is ERC20, Ownable {
         require(loanId < loanIdCounter.current(), "Loan not found");
 
         Loan storage _loan = loans[loanId];
+        require(_loan.isActive, "Loan not found");
         require(
             _loan.nftContract == nftContractAddress && _loan.nftId == nftId,
             "Loan not found"

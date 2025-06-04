@@ -1,4 +1,5 @@
-import { defiContract, nftContract, web3, updateBalances } from './connection.js';
+import { defiContract, nftContract, updateBalances, web3 } from './connection.js';
+import { nullAddress } from './constants.js';
 import { getFirstConnectedAccount } from './utils.js';
 
 async function loadAvailableLoans() {
@@ -7,24 +8,27 @@ async function loadAvailableLoans() {
     if (!loanRequestsContainer) return;
 
     loanRequestsContainer.innerHTML = '';
-    
-    const loanCount = await defiContract.methods.loanIdCounter().call();
-    
-    for (let i = 0; i < loanCount; i++) {
+
+    const loanIdCounter = await defiContract.methods.loanIdCounter().call();
+    if (loanIdCounter === 0) {
+      activeLoansContainer.innerHTML = '<p>No active loans found.</p>';
+      return;
+    }
+
+    for (let i = 0; i < loanIdCounter; i++) {
       const loan = await defiContract.methods.loans(i).call();
-      if (loan.isBasedNft && loan.lender === '0x0000000000000000000000000000000000000000') {
-        const nftOwner = await nftContract.methods.ownerOf(loan.nftId).call();
-        if (nftOwner.toLowerCase() === defiContract.options.address.toLowerCase()) {
-          const loanElement = document.createElement('div');
-          loanElement.className = 'loan-item mb-2 p-2 border rounded';
-          loanElement.innerHTML = `
-            <p><strong>Loan ID:</strong> ${i}</p>
-            <p><strong>NFT ID:</strong> ${loan.nftId}</p>
-            <p><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
-            <p><strong>Deadline:</strong> ${new Date(loan.deadline * 1000).toLocaleString()}</p>
-          `;
-          loanRequestsContainer.appendChild(loanElement);
-        }
+
+      if (loan.isBasedNft && loan.lender === nullAddress) {
+        const loanElement = document.createElement('div');
+        loanElement.className = 'loan-item mb-2 p-2 border border-2 rounded';
+        loanElement.innerHTML = `
+          <p><strong>Loan ID:</strong> ${i}</p>
+          <p><strong>NFT ID:</strong> ${loan.nftId}</p>
+          <p><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
+          <p><strong>Deadline:</strong> ${new Date(loan.deadline * 1000).toLocaleString()}</p>
+          <button onclick="lendToNftLoan(${i})" class="btn btn-success w-100">Lend</button>
+        `;
+        loanRequestsContainer.appendChild(loanElement);
       }
     }
   } catch (error) {
@@ -59,7 +63,7 @@ async function lendToNftLoan() {
       from: account,
       value: loan.amount
     });
-    
+
     alert('Loan funded successfully!');
     await loadAvailableLoans();
     await updateBalances(account);
@@ -69,4 +73,5 @@ async function lendToNftLoan() {
   }
 }
 
-export { loadAvailableLoans, lendToNftLoan };
+export { lendToNftLoan, loadAvailableLoans };
+
