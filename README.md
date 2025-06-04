@@ -80,9 +80,9 @@ Deploy both contracts to **Sepolia** or **Ganache**:
 Open the files:
 
 ```
-frontend/js/constants.js
-frontend/js/abi_defi.js
-frontend/js/abi_nft.js
+/js/constants.js
+/js/abi_defi.js
+/js/abi_nft.js
 ```
 
 Then **replace the following** with your deployed contract details:
