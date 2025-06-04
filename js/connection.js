@@ -45,7 +45,7 @@ async function updateUI(account) {
   if (defiContractOwner.toLowerCase() === account.toLowerCase()) {
     document.querySelector('.change-rate-text').innerHTML = `
       <label><input type="number" id="rateInput" class="form-control" required min="0" step="1"></label>
-      <label><button class="btn btn-primary" onclick="changeRate()">Change Rate</button></label>
+      <label><button type="button" class="btn btn-primary" onclick="changeRate()">Change Rate</button></label>
     `;
   }
   else {
