@@ -31,7 +31,7 @@ async function mintNft() {
 
 async function displayOwnedNFTs(account) {
   try {
-    const tokenIds = await nftContract.methods.tokensOfOwner(account).call();
+    const tokenIds = await nftContract.methods.ownedTokens(account).call();
     const nftCollection = document.querySelector('.nft-collection');
     if (!nftCollection) return;
 
