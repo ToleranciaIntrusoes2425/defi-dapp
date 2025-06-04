@@ -32,9 +32,8 @@ The platform uses:
 To run this project, you will need:
 
 - A crypto wallet like [MetaMask](https://metamask.io/)
-- ETH in the **Sepolia testnet**  
-  (get free ETH at: [Sepolia Faucet - Chainlink](https://faucets.chain.link/sepolia))
-- [Node.js](https://nodejs.org/) and a local HTTP server (e.g. `http-server`)
+- ETH in the **Sepolia testnet** (get free ETH at: [Sepolia Faucet - Chainlink](https://faucets.chain.link/sepolia))
+- Local HTTP server (e.g. `http-server`)
 - A deployed version of the **DeFi contract** and the **NFT contract**
 
 ---
@@ -51,65 +50,38 @@ cd project2
 
 ---
 
-### 2. Install Web3.js (if not already available)
+### 2. Deploy Smart Contracts
 
-```bash
-npm install web3
-```
+Deploy both contracts to **Sepolia**:
 
-Or use the CDN version (already included in the HTML):
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-```
-
----
-
-### 3. Deploy Smart Contracts
-
-Deploy both contracts to **Sepolia** or **Ganache**:
-
-1. Compile and deploy the `NFT.sol` and `DefiLoan.sol` contracts using **Remix**
+1. Compile and deploy the `nft.sol` and `def.sol` contracts using **Remix**
 2. Copy the deployed **contract addresses**
-3. Export the **ABIs** from Remix
 
----
+### 3. Update Frontend Configuration
 
-### 4. Update Frontend Configuration
-
-Open the files:
+Open the file:
 
 ```
 /js/constants.js
-/js/abi_defi.js
-/js/abi_nft.js
 ```
 
 Then **replace the following** with your deployed contract details:
 
 ```javascript
-export const defiContractAddress = "0xYourDeployedDefiLoanAddress";
-export const nftContractAddress = "0xYourDeployedNFTAddress";
-export const defiAbi = [ ... ]; // Replace with ABI of DefiLoan contract
-export const nftAbi = [ ... ];  // Replace with ABI of NFT contract
+export const defiContractAddress = "0xYourDeployedDefiContractAddress";
+export const nftContractAddress = "0xYourDeployedNFTContractAddress";
 ```
 
-> Both address and ABI are required for the dApp to communicate with the contracts.
+Optionally: 
 
 ---
 
 ### 5. Start Local Server
 
-Use `http-server` or Python to run a local server:
+Run the server:
 
 ```bash
-npx http-server
-```
-
-or
-
-```bash
-python3 -m http.server
+python3 -m http.server 8080
 ```
 
 Then open the app in your browser:
@@ -125,6 +97,25 @@ http://localhost:8080
 - Click "Connect Wallet" on the dApp interface.
 
 ---
+
+## Using Ganache
+
+- **You may use Ganache network but the NFT token URIs won't work.**
+- We provide a database with the contracts already deployed in /blockchain folder.
+- The steps below were successfully on Linux, but not on Windows.
+
+### 1. Install Ganache
+```
+npm i -g ganache
+```
+
+### 2. Start the blockchain
+```
+./start-blockchain.sh
+```
+
+### 3. Account selection
+Use one of the preloaded accounts in accounts-with-balance.txt for MetaMask.
 
 ## Features Overview
 
@@ -148,17 +139,24 @@ http://localhost:8080
 ```
 project2/
 │
-├── contracts/                   # Solidity smart contracts
-│   ├── defi.sol
-│   └── nft.sol
+├── blockchain/                   # Ganache blockchain data
 │
 ├── frontend/
 │   ├── index.html               # Main UI
 │   └─── js/
-│       ├── constants.js         # <-- Update addresses and ABIs here
+│       ├── connection.js
+│       ├── constants.js
+│       ├── exchange.js
+│       ├── lending.js
+│       ├── loan.js
+│       ├── main.js
+│       ├── nft.js
+│       ├── utils.js
 │       ├── abi_defi.js          # ABI for DefiLoan
 │       └── abi_nft.js             # ABI for NFT     
 │
+├── defi.sol                    # Defi contract
+├── nft.md                    # Nft contract
 └── README.md                    # This file
 ```
 ---

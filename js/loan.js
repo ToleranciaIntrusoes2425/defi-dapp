@@ -178,7 +178,11 @@ async function makePayment(id) {
       value: totalDue
     });
 
-    showAlert('Payment made successfully!', 'success');
+    if (isFinalPayment) {
+      showAlert('Final payment made successfully! Loan closed.', 'success');
+    } else {
+      showAlert('Payment made successfully!', 'success');
+    }
     await loadActiveLoans(account);
     await updateBalances(account);
   } catch (error) {
@@ -266,6 +270,7 @@ async function loadActiveLoans(account) {
         loanElement.innerHTML += `
           <p class="m-0"><strong>Payments:</strong> ${loan.paymentsMade}/${getTotalPayments(loan)}</p>
           <p class="m-0"><strong>Paid Amount:</strong> ${web3.utils.fromWei(getPaidAmount(loan).toString(), 'ether')} ETH</p>
+          <p class="m-0"><strong>Unpaid Amount:</strong> ${web3.utils.fromWei(getUnpaidAmount(loan).toString(), 'ether')} ETH</p>
         `;
 
         if (!loan.isBasedNft || loan.lender !== nullAddress) {
@@ -428,11 +433,20 @@ function getTerminationAmount(loan) {
 
 function getPaidAmount(loan) {
   const paymentsMade = parseInt(loan.paymentsMade);
-  if (paymentsMade <= 0) {
-    return 0;
-  }
-  const loanAmount = parseInt(loan.amount);
-  return paymentsMade * loanAmount;
+  const amount = parseInt(loan.amount);
+  const interestPayment = amount * defiInterest / 100;
+  return paymentsMade * interestPayment;
+}
+
+function getUnpaidAmount(params) {
+  const paymentsMade = parseInt(params.paymentsMade);
+  const amount = parseInt(params.amount);
+  const totalPayments = getTotalPayments(params);
+  const missingPayments = totalPayments - paymentsMade;
+
+  const interest = amount * defiInterest / 100;
+
+  return amount + missingPayments * interest;
 }
 
 function getNextPaymentDeadline(loan) {
