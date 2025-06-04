@@ -77,10 +77,12 @@ Deploy both contracts to **Sepolia** or **Ganache**:
 
 ### 4. Update Frontend Configuration
 
-Open the file:
+Open the files:
 
 ```
 frontend/js/constants.js
+frontend/js/abi_defi.js
+frontend/js/abi_nft.js
 ```
 
 Then **replace the following** with your deployed contract details:
@@ -159,14 +161,6 @@ project2/
 │
 └── README.md                    # This file
 ```
-
----
-
-## Security Notes
-
-- All transactions are executed via MetaMask, protecting private keys.
-- The smart contract requires ETH for gas, so make sure wallets have SepoliaETH.
-
 ---
 
 ## References
@@ -177,5 +171,3 @@ project2/
 - [Sepolia Faucet](https://faucets.chain.link/sepolia)
 
 ---
-
-Good luck and happy building! 🚀
