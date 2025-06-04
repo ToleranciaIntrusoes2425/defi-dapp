@@ -1,7 +1,17 @@
-import { defiContract, nftContract, updateBalances, web3 } from './connection.js';
+import { defiContract, defiInterest, defiPeriodicity, defiTermination, nftContract, updateBalances, web3 } from './connection.js';
 import { defiContractAddress, nftContractAddress, nullAddress } from './constants.js';
 import { displayOwnedNFTs } from './nft.js';
-import { getFirstConnectedAccount, showAlert, truncateAddress } from './utils.js';
+import { formatDuration, getFirstConnectedAccount, showAlert, truncateAddress } from './utils.js';
+
+async function populateLoanRates() {
+  const interestElements = document.getElementsByClassName('loan-interest');
+  const periodicityElements = document.getElementsByClassName('loan-periodicity');
+  const terminationElements = document.getElementsByClassName('loan-termination');
+
+  Array.from(interestElements).forEach(el => el.textContent = `Interest Rate: ${defiInterest}%`);
+  Array.from(periodicityElements).forEach(el => el.textContent = `Periodicity: ${formatDuration(defiPeriodicity)}`);
+  Array.from(terminationElements).forEach(el => el.textContent = `Termination Fee: ${defiTermination}%`);
+}
 
 async function createLoan() {
   const account = await getFirstConnectedAccount();
@@ -21,7 +31,7 @@ async function createLoan() {
 
   try {
     const dexAmountWei = dexAmount;
-    const deadline = Math.floor(Date.now() / 1000) + (days * 86400);
+    const deadline = days * 86400;
     await defiContract.methods.loan(dexAmountWei, deadline).send({
       from: account
     });
@@ -55,7 +65,7 @@ async function createNftLoan() {
     alert('Please enter a valid amount');
     return;
   }
-  
+
   const days = parseFloat(document.getElementById('nftDeadline').value);
   if (!days || isNaN(days) || days > 28) {
     alert('Please enter a valid duration (max 28 days)');
@@ -63,7 +73,7 @@ async function createNftLoan() {
   }
 
   try {
-    const deadline = Math.floor(Date.now() / 1000) + (parseInt(days) * 86400);
+    const deadline = parseInt(days) * 86400;
     const loanAmountWei = web3.utils.toWei(loanAmountStr, "ether");
     await nftContract.methods.approve(defiContractAddress, nftId).send({ from: account });
 
@@ -101,8 +111,8 @@ async function makePayment(id) {
       return;
     }
 
-    const interestRate = await defiContract.methods.interest().call();
-    const periodicity = await defiContract.methods.periodicity().call();
+    const interestRate = defiInterest;
+    const periodicity = defiPeriodicity;
 
     // Calculate payment amount (simplified for demo)
     const paymentAmount = loan.amount * interestRate / 100;
@@ -145,7 +155,7 @@ async function terminateLoan(id) {
       return;
     }
 
-    const terminationFee = await defiContract.methods.termination().call();
+    const terminationFee = defiTermination;
     const terminationAmount = loan.amount * (1 + terminationFee);
 
     await defiContract.methods.terminateLoan(loanId).send({
@@ -182,20 +192,41 @@ async function loadActiveLoans(account) {
         const loanElement = document.createElement('div');
         loanElement.className = 'loan-item mb-2 p-2 border border-2 rounded';
         loanElement.innerHTML = `
-          <p><strong>Loan ID:</strong> ${i}</p>
-          <p><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
-          <p><strong>Deadline:</strong> ${new Date(loan.deadline * 1000).toLocaleString()}</p>
-          <p><strong>Type:</strong> ${loan.isBasedNft ? 'NFT-based' : 'DEX-based'}</p>
+          <p class="m-0"><strong>Loan ID:</strong> ${i}</p>
+          <p class="m-0"><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
         `;
 
         if (loan.isBasedNft) {
           loanElement.innerHTML += `
-            <p><strong>NFT ID:</strong> ${loan.nftId}</p>
-            <p><strong>Lender:</strong> ${loan.lender == nullAddress ? 'None' : truncateAddress(loan.lender, 8)}</p>
+            <p class="m-0"><strong>NFT ID:</strong> ${loan.nftId}</p>
+            <p class="m-0"><strong>Lender:</strong> ${loan.lender == nullAddress ? 'None' : truncateAddress(loan.lender, 8)}</p>
+          `;
+        } else {
+          loanElement.innerHTML += `
+            <p class="m-0"><strong>Dex Amount:</strong> ${loan.dexAmount} DEX</p>
           `;
         }
 
-        loanElement.innerHTML += `<button onclick="makePayment(${i})" class="btn btn-success w-100">Make Payment</button>`;
+        const end = parseInt(loan.start) + parseInt(loan.deadline);
+
+        loanElement.innerHTML += `
+          <p class="m-0"><strong>Payments Made:</strong> ${loan.paymentsMade}</p>
+          <p class="m-0"><strong>Paid Amount:</strong> ${web3.utils.fromWei(getPaidAmount(loan).toString(), 'ether')} ETH</p>
+        `;
+
+        if (!loan.isBasedNft || loan.lender !== nullAddress) {
+          loanElement.innerHTML += `
+            <p class="m-0"><strong>Start:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
+            <p class="m-0"><strong>Deadline:</strong> ${new Date(end * 1000).toLocaleString()} (in ${formatDuration(end - Date.now() / 1000)})</p>
+            `
+        } else {
+          loanElement.innerHTML += `
+            <p class="m-0"><strong>Published:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
+            <p class="m-0"><strong>Deadline:</strong> ${formatDuration(loan.deadline)}</p>
+          `;
+        }
+
+        loanElement.innerHTML += `<button onclick="makePayment(${i})" class="btn btn-success w-100 mt-2">Make Payment</button>`;
 
         if (!loan.isBasedNft) {
           loanElement.innerHTML += `<button onclick="terminateLoan(${i})" class="btn btn-danger w-100 mt-2">Terminate Loan</button>`;
@@ -245,9 +276,17 @@ async function initLoanNotifications() {
     });
 }
 
+function getPaidAmount(loan) {
+  const paymentsMade = parseInt(loan.paymentsMade);
+  if (paymentsMade <= 0) {
+    return 0;
+  }
+  const loanAmount = parseInt(loan.amount);
+  return paymentsMade * loanAmount;
+}
+
 export {
   checkAllLoans, createLoan,
-  createNftLoan, initLoanNotifications, loadActiveLoans, makePayment,
-  terminateLoan
+  createNftLoan, initLoanNotifications, loadActiveLoans, makePayment, populateLoanRates, terminateLoan, getPaidAmount
 };
 

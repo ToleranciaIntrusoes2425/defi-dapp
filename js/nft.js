@@ -52,16 +52,16 @@ async function displayOwnedNFTs(account) {
       const isGanache = (await web3.eth.getChainId()) == 1337;
 
       const tokenURI = isGanache
-        ? 'Not available on Ganache'
+        ? 'Not available on Ganache network'
         : await nftContract.methods.tokenURI(tokenIdValue).call();
       const owner = await nftContract.methods.ownerOf(tokenIdValue).call();
       if (owner.toLowerCase() === account.toLowerCase()) {
         const nftElement = document.createElement('div');
         nftElement.className = 'nft-item mb-3 p-3 border border-2 rounded';
         nftElement.innerHTML = `
-          <p><strong>NFT ID:</strong> ${tokenIdValue}</p>
-          <p><strong>URI:</strong> ${isGanache ? tokenURI : tokenURI.substring(0, 50) + "..."}</p>
-          <button onclick="viewNftDetails(${tokenIdValue})" class="btn btn-sm btn-secondary">View Details</button>
+          <p class="m-0"><strong>NFT ID:</strong> ${tokenIdValue}</p>
+          <p class="m-0"><strong>URI:</strong> ${isGanache ? tokenURI : tokenURI.substring(0, 50) + "..."}</p>
+          <button onclick="viewNftDetails(${tokenIdValue})" class="btn btn-sm btn-secondary mt-2">View Details</button>
         `;
         nftCollection.appendChild(nftElement);
       }
@@ -75,7 +75,7 @@ async function viewNftDetails(tokenId) {
   try {
     const isGanache = (await web3.eth.getChainId()) == 1337;
     const tokenURI = isGanache
-      ? 'Not available on Ganache'
+      ? 'Not available on Ganache network'
       : await nftContract.methods.tokenURI(tokenId).call();
     showAlert(`NFT ID: ${tokenId}\nURI: ${tokenURI}`);
     console.log(tokenURI)

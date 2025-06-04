@@ -1,6 +1,7 @@
 import { defiContract, updateBalances, web3 } from './connection.js';
 import { nftContractAddress, nullAddress } from './constants.js';
-import { getFirstConnectedAccount, showAlert } from './utils.js';
+import { getPaidAmount } from './loan.js';
+import { formatDuration, getFirstConnectedAccount, showAlert, truncateAddress } from './utils.js';
 
 async function loadAvailableLoans(account) {
   try {
@@ -19,14 +20,18 @@ async function loadAvailableLoans(account) {
       const loan = await defiContract.methods.loans(i).call();
 
       if (loan.isBasedNft && loan.lender === nullAddress && loan.borrower.toLowerCase() !== account.toLowerCase()) {
+        const end = parseInt(loan.start) + parseInt(loan.deadline);
+
         const loanElement = document.createElement('div');
         loanElement.className = 'loan-item mb-2 p-2 border border-2 rounded';
         loanElement.innerHTML = `
-          <p><strong>Loan ID:</strong> ${i}</p>
-          <p><strong>NFT ID:</strong> ${loan.nftId}</p>
-          <p><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
-          <p><strong>Deadline:</strong> ${new Date(loan.deadline * 1000).toLocaleString()}</p>
-          <button onclick="lendToNftLoan(${i})" class="btn btn-success w-100">Lend</button>
+          <p class="m-0"><strong>Loan ID:</strong> ${i}</p>
+          <p class="m-0"><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
+          <p class="m-0"><strong>NFT ID:</strong> ${loan.nftId}</p>
+          <p class="m-0"><strong>Borrower:</strong> ${truncateAddress(loan.borrower, 8)}</p>
+          <p class="m-0"><strong>Published:</strong> ${new Date(end * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
+          <p class="m-0"><strong>Deadline:</strong> ${formatDuration(loan.deadline)}</p>
+          <button onclick="lendToNftLoan(${i})" class="btn btn-success w-100 mt-2">Lend</button>
         `;
         loanRequestsContainer.appendChild(loanElement);
       }
@@ -54,15 +59,20 @@ async function loadActiveLendings(account) {
 
     for (let i = 0; i < loanIdCounter; i++) {
       const loan = await defiContract.methods.loans(i).call();
+      const end = parseInt(loan.start) + parseInt(loan.deadline);
 
       if (loan.isBasedNft && loan.lender.toLowerCase() === account.toLowerCase()) {
         const loanElement = document.createElement('div');
         loanElement.className = 'loan-item mb-2 p-2 border border-2 rounded';
         loanElement.innerHTML = `
-          <p><strong>Loan ID:</strong> ${i}</p>
-          <p><strong>NFT ID:</strong> ${loan.nftId}</p>
-          <p><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
-          <p><strong>Deadline:</strong> ${new Date(loan.deadline * 1000).toLocaleString()}</p>
+          <p class="m-0"><strong>Loan ID:</strong> ${i}</p>
+          <p class="m-0"><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
+          <p class="m-0"><strong>NFT ID:</strong> ${loan.nftId}</p>
+          <p class="m-0"><strong>Borrower:</strong> ${truncateAddress(loan.borrower, 8)}</p>
+          <p class="m-0"><strong>Payments Made:</strong> ${loan.paymentsMade}</p>
+          <p class="m-0"><strong>Paid Amount:</strong> ${web3.utils.fromWei(getPaidAmount(loan).toString(), 'ether')} ETH</p>
+          <p class="m-0"><strong>Start:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
+          <p class="m-0"><strong>Deadline:</strong> ${new Date(end * 1000).toLocaleString()} (in ${formatDuration(end - Date.now() / 1000)})</p>
         `;
         loanLendingsContainer.appendChild(loanElement);
       }

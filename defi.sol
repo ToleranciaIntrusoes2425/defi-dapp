@@ -105,9 +105,8 @@ contract DecentralizedFinance is ERC20, Ownable {
         returns (uint256)
     {
         require(dexAmount > 0, "Value must be > 0");
-        require(deadline > block.timestamp, "Deadline must be > now");
         require(
-            deadline <= block.timestamp + maxLoanDuration,
+            deadline <= maxLoanDuration,
             "Maximum duration of the loan cannot exceed 4 weeks"
         );
         require(
@@ -160,7 +159,7 @@ contract DecentralizedFinance is ERC20, Ownable {
         );
         require(_loan.lender != address(0), "There's no lender for that loan");
 
-        uint256 totalPayments = (_loan.deadline - _loan.start) / periodicity;
+        uint256 totalPayments = _loan.deadline / periodicity;
         bool isFinalPayment = (_loan.paymentsMade + 1 >= totalPayments);
 
         uint256 interestPayment = (_loan.amount * interest) / 100;
@@ -277,9 +276,8 @@ contract DecentralizedFinance is ERC20, Ownable {
         uint64 deadline
     ) external returns (uint256) {
         require(loanAmount > 0, "Value must be > 0");
-        require(deadline > block.timestamp, "Deadline must be > now");
         require(
-            deadline <= block.timestamp + maxLoanDuration,
+            deadline <= maxLoanDuration,
             "Maximum duration of the loan cannot exceed 4 weeks"
         );
         require(
@@ -348,6 +346,7 @@ contract DecentralizedFinance is ERC20, Ownable {
         require(_loan.borrower != msg.sender, "You can't lend to yourself");
         require(msg.value == _loan.amount, "Incorrect ETH amount sent");
 
+        _loan.start = block.timestamp;
         _loan.lender = msg.sender;
 
         payable(_loan.borrower).transfer(_loan.amount);
@@ -367,7 +366,7 @@ contract DecentralizedFinance is ERC20, Ownable {
             periodicity;
 
         require(
-            block.timestamp > _loan.deadline ||
+            block.timestamp > _loan.start + _loan.deadline ||
                 block.timestamp > nextPaymentDue,
             "Loan is still active and on schedule"
         );

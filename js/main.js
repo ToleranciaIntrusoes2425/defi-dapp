@@ -1,7 +1,7 @@
 import { changeRate, checkAccountConnection, connectMetaMask, updateUI } from './connection.js';
 import { executeExchange, switchExchangeTokens, updateExchangeRate, updateSwapRate } from './exchange.js';
 import { lendToNftLoan } from './lending.js';
-import { createLoan, createNftLoan, initLoanNotifications, makePayment, terminateLoan } from './loan.js';
+import { createLoan, createNftLoan, initLoanNotifications, makePayment, populateLoanRates, terminateLoan } from './loan.js';
 import { mintNft, viewNftDetails } from './nft.js';
 
 
@@ -10,12 +10,14 @@ if (document.readyState === 'complete') {
     await checkAccountConnection();
     await initLoanNotifications();
     await updateSwapRate();
+    await populateLoanRates();
   })();
 } else {
   window.addEventListener('load', async () => {
     await checkAccountConnection();
     await initLoanNotifications();
     await updateSwapRate();
+    await populateLoanRates();
   });
 }
 

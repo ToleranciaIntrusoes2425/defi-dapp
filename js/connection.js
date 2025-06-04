@@ -10,6 +10,9 @@ import { getFirstAvailableAccount, getFirstConnectedAccount, showAlert, truncate
 const web3 = new Web3(window.ethereum);
 const defiContract = new web3.eth.Contract(abiDefi, defiContractAddress);
 const defiContractOwner = await defiContract.methods.owner().call();
+const defiPeriodicity = await defiContract.methods.periodicity().call();
+const defiInterest = await defiContract.methods.interest().call();
+const defiTermination = await defiContract.methods.termination().call();
 const nftContract = new web3.eth.Contract(abiNft, nftContractAddress);
 const nftContractOwner = await nftContract.methods.owner().call();
 
@@ -114,7 +117,6 @@ async function checkAccountConnection() {
 export {
   changeRate, checkAccountConnection,
   connectMetaMask,
-  defiContract, defiContractOwner, nftContract, nftContractOwner, updateBalances, web3,
-  updateUI
+  defiContract, defiContractOwner, defiInterest, defiPeriodicity, defiTermination, nftContract, nftContractOwner, updateBalances, updateUI, web3
 };
 
