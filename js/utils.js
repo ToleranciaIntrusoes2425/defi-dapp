@@ -36,17 +36,22 @@ async function getFirstConnectedAccount() {
   return null;
 }
 
-function showAlert(message, type = "success", timeout = 3000) {
+function showAlert(message, type = "success", timeout = 6000) {
   const containerElements = document.getElementsByClassName('alert-container');
   Array.from(containerElements).forEach(container => {
     const alert = document.createElement("div");
     alert.className = `alert alert-${type} alert-dismissible fade show mb-2`;
     alert.setAttribute("role", "alert");
 
+    alert.style.display = "inline-block";
+    alert.style.width = "auto";
+    alert.style.maxWidth = "100%";
+    alert.style.overflowWrap = "break-word";
+
     alert.innerHTML = `
-        <span class="alert-message">${message}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      `;
+      <span class="alert-message">${message}</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
 
     container.appendChild(alert);
 

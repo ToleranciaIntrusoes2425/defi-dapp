@@ -76,8 +76,8 @@ async function viewNftDetails(tokenId) {
     const isGanache = (await web3.eth.getChainId()) == 1337;
     const tokenURI = isGanache
       ? 'Not available on Ganache'
-      : await nftContract.methods.tokenURI(tokenIdValue).call();
-    alert(`NFT ID: ${tokenId}\nURI: ${tokenURI}`);
+      : await nftContract.methods.tokenURI(tokenId).call();
+    showAlert(`NFT ID: ${tokenId}\nURI: ${tokenURI}`);
     console.log(tokenURI)
   } catch (error) {
     console.error("Erro ao obter detalhes do NFT:", error);

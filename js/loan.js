@@ -44,19 +44,19 @@ async function createNftLoan() {
     return;
   }
 
-  const nftId = prompt('Enter NFT ID to use as collateral:');
+  const nftId = parseFloat(document.getElementById('nftId').value);
   if (!nftId || isNaN(nftId)) {
     alert('Please enter a valid NFT ID');
     return;
   }
 
-  const loanAmount = prompt('Enter loan amount in ETH:');
-  if (!loanAmount || isNaN(loanAmount)) {
+  const loanAmountStr = document.getElementById('nftLoan').value.trim();
+  if (!loanAmountStr || isNaN(loanAmountStr)) {
     alert('Please enter a valid amount');
     return;
   }
-
-  const days = prompt('Enter loan duration in days (max 28 days):');
+  
+  const days = parseFloat(document.getElementById('nftDeadline').value);
   if (!days || isNaN(days) || days > 28) {
     alert('Please enter a valid duration (max 28 days)');
     return;
@@ -64,8 +64,7 @@ async function createNftLoan() {
 
   try {
     const deadline = Math.floor(Date.now() / 1000) + (parseInt(days) * 86400);
-    const loanAmountWei = web3.utils.toWei(loanAmount, "ether");
-
+    const loanAmountWei = web3.utils.toWei(loanAmountStr, "ether");
     await nftContract.methods.approve(defiContractAddress, nftId).send({ from: account });
 
     await defiContract.methods.makeLoanRequestByNft(nftContractAddress, nftId, loanAmountWei, deadline)
