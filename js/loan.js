@@ -24,15 +24,34 @@ async function createLoan() {
     return;
   }
 
-  const days = parseInt(document.getElementById('deadline').value);
-  if (isNaN(days) || days <= 0 || days > 28) {
+  const input = document.getElementById('deadline');
+  const datetimeStr = input.value;
+
+  if (!datetimeStr) {
+    alert("Please select a date and time.");
+    return;
+  }
+
+  const selectedTimestamp = Math.floor(new Date(datetimeStr).getTime() / 1000);
+  const nowTimestamp = Math.floor(Date.now() / 1000);
+
+  const maxDays = 28;
+  const maxSeconds = maxDays * 24 * 60 * 60;
+
+  const diff = selectedTimestamp - nowTimestamp;
+
+  if (diff <= 0 || diff > maxSeconds) {
+    alert("Please choose a date/time between now and 28 days from now.");
     return;
   }
 
   try {
+    const timestampMs = new Date(datetimeStr).getTime();
+    const timestampSec = Math.floor(timestampMs / 1000);
+    const nowSec = Math.floor(Date.now() / 1000);
+    const timeLoan = timestampSec - nowSec;
     const dexAmountWei = dexAmount;
-    const deadline = days * 86400;
-    await defiContract.methods.loan(dexAmountWei, deadline).send({
+    await defiContract.methods.loan(dexAmountWei, timeLoan).send({
       from: account
     });
 
@@ -66,18 +85,36 @@ async function createNftLoan() {
     return;
   }
 
-  const days = parseFloat(document.getElementById('nftDeadline').value);
-  if (!days || isNaN(days) || days > 28) {
-    alert('Please enter a valid duration (max 28 days)');
+  const input = document.getElementById('nftDeadline');
+  const datetimeStr = input.value;
+
+  if (!datetimeStr) {
+    alert("Please select a date and time.");
+    return;
+  }
+
+  const selectedTimestamp = Math.floor(new Date(datetimeStr).getTime() / 1000);
+  const nowTimestamp = Math.floor(Date.now() / 1000);
+
+  const maxDays = 28;
+  const maxSeconds = maxDays * 24 * 60 * 60;
+
+  const diff = selectedTimestamp - nowTimestamp;
+
+  if (diff <= 0 || diff > maxSeconds) {
+    alert("Please choose a date/time between now and 28 days from now.");
     return;
   }
 
   try {
-    const deadline = parseInt(days) * 86400;
+    const timestampMs = new Date(datetimeStr).getTime();
+    const timestampSec = Math.floor(timestampMs / 1000);
+    const nowSec = Math.floor(Date.now() / 1000);
+    const timeLoan = timestampSec - nowSec;
     const loanAmountWei = web3.utils.toWei(loanAmountStr, "ether");
     await nftContract.methods.approve(defiContractAddress, nftId).send({ from: account });
 
-    await defiContract.methods.makeLoanRequestByNft(nftContractAddress, nftId, loanAmountWei, deadline)
+    await defiContract.methods.makeLoanRequestByNft(nftContractAddress, nftId, loanAmountWei, timeLoan)
       .send({ from: account });
 
     await displayOwnedNFTs(account);
