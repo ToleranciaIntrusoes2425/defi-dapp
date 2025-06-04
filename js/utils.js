@@ -75,8 +75,8 @@ function truncateAddress(address, length = 6) {
   return `${address.slice(0, length)}...${address.slice(-length)}`;
 }
 
-function formatDuration(seconds) {
-  if (seconds < 0) return "Invalid duration";
+function formatDuration(seconds, withLabel = true) {
+  let secondsValue = Math.abs(seconds);
 
   const units = [
     ['week', 7 * 24 * 60 * 60],
@@ -89,19 +89,24 @@ function formatDuration(seconds) {
   const parts = [];
 
   for (const [name, count] of units) {
-    const value = Math.floor(seconds / count);
-    seconds %= count;
+    const value = Math.floor(secondsValue / count);
+    secondsValue %= count;
 
     if (value > 0 || parts.length === 0 && name === 'second') {
       parts.push(`${value} ${name}${value !== 1 ? 's' : ''}`);
     }
   }
 
-  if (parts.length > 1) {
-    return parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
-  } else {
-    return parts[0] || '0 seconds';
+
+  const res = parts.length > 1
+      ? parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1]
+      : parts[0] || '0 seconds';
+
+  if (!withLabel) {
+    return res;
   }
+
+  return seconds >= 0 ? `in ${res}` : `${res} ago`;
 }
 
 export {

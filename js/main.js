@@ -7,23 +7,21 @@ import { mintNft, viewNftDetails } from './nft.js';
 
 if (document.readyState === 'complete') {
   (async () => {
+    document.querySelector(".wallet-connect-btn")?.addEventListener("click", connectMetaMask);
     await checkAccountConnection();
     await initLoanNotifications();
     await updateSwapRate();
     await populateLoanRates();
   })();
 } else {
-  window.addEventListener('load', async () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.querySelector(".wallet-connect-btn")?.addEventListener("click", connectMetaMask);
     await checkAccountConnection();
     await initLoanNotifications();
     await updateSwapRate();
     await populateLoanRates();
   });
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  document.querySelector(".wallet-connect-btn")?.addEventListener("click", connectMetaMask);
-});
 
 window.ethereum.on('accountsChanged', (_) => {
   window.location.reload();

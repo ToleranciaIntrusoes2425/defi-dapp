@@ -1,6 +1,6 @@
 import { defiContract, updateBalances, web3 } from './connection.js';
 import { nftContractAddress, nullAddress } from './constants.js';
-import { getPaidAmount } from './loan.js';
+import { getNextPaymentDeadline, getPaidAmount, getTotalPayments } from './loan.js';
 import { formatDuration, getFirstConnectedAccount, showAlert, truncateAddress } from './utils.js';
 
 async function loadAvailableLoans(account) {
@@ -29,8 +29,8 @@ async function loadAvailableLoans(account) {
           <p class="m-0"><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
           <p class="m-0"><strong>NFT ID:</strong> ${loan.nftId}</p>
           <p class="m-0"><strong>Borrower:</strong> ${truncateAddress(loan.borrower, 8)}</p>
-          <p class="m-0"><strong>Published:</strong> ${new Date(end * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
-          <p class="m-0"><strong>Deadline:</strong> ${formatDuration(loan.deadline)}</p>
+          <p class="m-0"><strong>Published:</strong> ${new Date(end * 1000).toLocaleString()} (${formatDuration(loan.start - Date.now() / 1000)})</p>
+          <p class="m-0"><strong>Deadline:</strong> ${formatDuration(loan.deadline, false)}</p>
           <button onclick="lendToNftLoan(${i})" class="btn btn-success w-100 mt-2">Lend</button>
         `;
         loanRequestsContainer.appendChild(loanElement);
@@ -69,10 +69,11 @@ async function loadActiveLendings(account) {
           <p class="m-0"><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
           <p class="m-0"><strong>NFT ID:</strong> ${loan.nftId}</p>
           <p class="m-0"><strong>Borrower:</strong> ${truncateAddress(loan.borrower, 8)}</p>
-          <p class="m-0"><strong>Payments Made:</strong> ${loan.paymentsMade}</p>
+          <p class="m-0"><strong>Payments:</strong> ${loan.paymentsMade}/${getTotalPayments(loan)}</p>
           <p class="m-0"><strong>Paid Amount:</strong> ${web3.utils.fromWei(getPaidAmount(loan).toString(), 'ether')} ETH</p>
-          <p class="m-0"><strong>Start:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
-          <p class="m-0"><strong>Deadline:</strong> ${new Date(end * 1000).toLocaleString()} (in ${formatDuration(end - Date.now() / 1000)})</p>
+          <p class="m-0"><strong>Start:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(loan.start - Date.now() / 1000)})</p>
+          <p class="m-0"><strong>Deadline:</strong> ${new Date(end * 1000).toLocaleString()} (${formatDuration(end - Date.now() / 1000)})</p>
+          <p class="m-0"><strong>Next Payment Deadline:</strong> ${new Date(getNextPaymentDeadline(loan) * 1000).toLocaleString()} (${formatDuration(getNextPaymentDeadline(loan) - Date.now() / 1000)})</p>
         `;
         loanLendingsContainer.appendChild(loanElement);
       }

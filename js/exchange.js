@@ -89,7 +89,6 @@ function switchExchangeTokens(event) {
 
 async function executeExchange(event) {
   event.preventDefault();
-  console.log(event);
 
   const account = await getFirstConnectedAccount();
   if (!account) {

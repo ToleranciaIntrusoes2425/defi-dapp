@@ -9,7 +9,7 @@ async function populateLoanRates() {
   const terminationElements = document.getElementsByClassName('loan-termination');
 
   Array.from(interestElements).forEach(el => el.textContent = `Interest Rate: ${defiInterest}%`);
-  Array.from(periodicityElements).forEach(el => el.textContent = `Periodicity: ${formatDuration(defiPeriodicity)}`);
+  Array.from(periodicityElements).forEach(el => el.textContent = `Periodicity: ${formatDuration(defiPeriodicity, false)}`);
   Array.from(terminationElements).forEach(el => el.textContent = `Termination Fee: ${defiTermination}%`);
 }
 
@@ -247,23 +247,26 @@ async function loadActiveLoans(account) {
         const end = parseInt(loan.start) + parseInt(loan.deadline);
 
         loanElement.innerHTML += `
-          <p class="m-0"><strong>Payments Made:</strong> ${loan.paymentsMade}</p>
+          <p class="m-0"><strong>Payments:</strong> ${loan.paymentsMade}/${getTotalPayments(loan)}</p>
           <p class="m-0"><strong>Paid Amount:</strong> ${web3.utils.fromWei(getPaidAmount(loan).toString(), 'ether')} ETH</p>
         `;
 
         if (!loan.isBasedNft || loan.lender !== nullAddress) {
           loanElement.innerHTML += `
-            <p class="m-0"><strong>Start:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
-            <p class="m-0"><strong>Deadline:</strong> ${new Date(end * 1000).toLocaleString()} (in ${formatDuration(end - Date.now() / 1000)})</p>
-            `
+            <p class="m-0"><strong>Start:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(loan.start - Date.now() / 1000)})</p>
+            <p class="m-0"><strong>Deadline:</strong> ${new Date(end * 1000).toLocaleString()} (${formatDuration(end - Date.now() / 1000)})</p>
+            <p class="m-0"><strong>Next Payment Deadline:</strong> ${new Date(getNextPaymentDeadline(loan) * 1000).toLocaleString()} (${formatDuration(getNextPaymentDeadline(loan) - Date.now() / 1000)})</p>
+          `;
         } else {
           loanElement.innerHTML += `
-            <p class="m-0"><strong>Published:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)} ago)</p>
-            <p class="m-0"><strong>Deadline:</strong> ${formatDuration(loan.deadline)}</p>
+            <p class="m-0"><strong>Published:</strong> ${new Date(loan.start * 1000).toLocaleString()} (${formatDuration(Date.now() / 1000 - loan.start)})</p>
+            <p class="m-0"><strong>Deadline:</strong> ${formatDuration(loan.deadline, false)}</p>
           `;
         }
 
-        loanElement.innerHTML += `<button onclick="makePayment(${i})" class="btn btn-success w-100 mt-2">Make Payment</button>`;
+        console.log(getNextPaymentValue(loan));
+
+        loanElement.innerHTML += `<button onclick="makePayment(${i})" class="btn btn-success w-100 mt-2">Make Payment (${web3.utils.fromWei(getNextPaymentValue(loan).toString(), 'ether')} ETH)</button>`;
 
         if (!loan.isBasedNft) {
           loanElement.innerHTML += `<button onclick="terminateLoan(${i})" class="btn btn-danger w-100 mt-2">Terminate Loan</button>`;
@@ -322,8 +325,39 @@ function getPaidAmount(loan) {
   return paymentsMade * loanAmount;
 }
 
+function getNextPaymentDeadline(loan) {
+  const start = parseInt(loan.start);
+  const paymentsMade = parseInt(loan.paymentsMade);
+  const nextPaymentDeadline = start + (paymentsMade + 1) * defiPeriodicity;
+  return nextPaymentDeadline;
+}
+
+function getTotalPayments(loan) {
+  const deadline = parseInt(loan.deadline);
+  return Math.floor(deadline / defiPeriodicity);
+}
+
+function getNextPaymentValue(loan) {
+  const paymentsMade = parseInt(loan.paymentsMade);
+  const amount = parseInt(loan.amount);
+
+  const totalPayments = getTotalPayments(loan);
+ 
+  const isFinalPayment = paymentsMade + 1 >= totalPayments;
+
+  const interestPayment = amount * defiInterest / 100;
+
+  let totalDue = interestPayment;
+  if (isFinalPayment) {
+    totalDue += amount;
+  }
+
+  return Math.floor(totalDue);
+}
+
 export {
   checkAllLoans, createLoan,
-  createNftLoan, initLoanNotifications, loadActiveLoans, makePayment, populateLoanRates, terminateLoan, getPaidAmount
+  createNftLoan, initLoanNotifications, loadActiveLoans, makePayment, populateLoanRates, terminateLoan, getPaidAmount,
+  getNextPaymentDeadline, getTotalPayments, getNextPaymentValue
 };
 
