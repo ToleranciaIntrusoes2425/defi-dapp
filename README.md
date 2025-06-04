@@ -69,9 +69,9 @@ Or use the CDN version (already included in the HTML):
 
 Deploy both contracts to **Sepolia** or **Ganache**:
 
-1. Compile and deploy the `NFT.sol` and `DefiLoan.sol` contracts using **Remix** or **Hardhat**
+1. Compile and deploy the `NFT.sol` and `DefiLoan.sol` contracts using **Remix**
 2. Copy the deployed **contract addresses**
-3. Export the **ABIs** from Remix (or get them from `artifacts`)
+3. Export the **ABIs** from Remix
 
 ---
 
