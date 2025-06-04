@@ -105,19 +105,37 @@ async function makePayment(id) {
     const interestRate = await defiContract.methods.interest().call();
     const periodicity = await defiContract.methods.periodicity().call();
 
-    // Calculate payment amount (simplified for demo)
-    const paymentAmount = loan.amount * interestRate / 100;
+    const totalPayments = Math.floor((loan.deadline - loan.start) / periodicity);
+    const isFinalPayment = loan.paymentsMade + 1 >= totalPayments;
+
+    const interestPayment = loan.amount * interestRate / 100;
+    let totalDue = interestPayment;
+
+    if (isFinalPayment) {
+      totalDue += parseInt(loan.amount);
+    }
+
+    const nextPaymentDue = parseInt(loan.start) + (parseInt(loan.paymentsMade) + 1) * parseInt(periodicity);
+
+    const now = Math.floor(Date.now() / 1000);
+
+    if (now > nextPaymentDue) {
+      showAlert("Payment deadline missed. Loan will be deleted.", "danger");
+      await defiContract.methods.checkLoan(loanId).send({ from: account });
+      await loadActiveLoans(account);
+      return;
+    }
 
     await defiContract.methods.makePayment(loanId).send({
       from: account,
-      value: paymentAmount
+      value: totalDue
     });
 
-    alert('Payment made successfully!');
+    showAlert('Payment made successfully!', 'success');
     await loadActiveLoans(account);
   } catch (error) {
     console.error("Error making payment:", error);
-    alert('Error making payment: ' + error.message);
+    showAlert('Error making payment: ' + error.message, 'danger');
   }
 }
 
@@ -214,13 +232,22 @@ async function checkAllLoans() {
   try {
     const loanCount = await defiContract.methods.loanIdCounter().call();
     for (let i = 0; i < loanCount; i++) {
-      await defiContract.methods.checkLoan(i).send({ from: await getFirstConnectedAccount() });
+      try {
+        await defiContract.methods.checkLoan(i).send({ from: account });
+        console.log(`Checked loan ${i}`);
+      } catch (error) {
+        console.warn(`Loan ${i} not eligible for termination or failed:`, error.message);
+      }
     }
     console.log('All loans checked');
   } catch (error) {
     console.error("Error checking loans:", error);
   }
 }
+
+setInterval(() => {
+  checkAllLoans();
+}, 10 * 60 * 1000);
 
 async function initLoanNotifications() {
   const owner = await defiContract.methods.owner().call();

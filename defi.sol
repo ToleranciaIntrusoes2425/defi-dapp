@@ -355,15 +355,17 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         require(_loan.isActive, "Loan not found");
 
-        uint256 nextPaymentDue = _loan.start +
-            (_loan.paymentsMade + 1) *
-            periodicity;
+        uint256 nextPaymentDue = _loan.start + (_loan.paymentsMade + 1) * periodicity;
+        bool missedPayment = block.timestamp > nextPaymentDue;
 
-        require(
-            block.timestamp > _loan.deadline ||
-                block.timestamp > nextPaymentDue,
-            "Loan is still active and on schedule"
-        );
+        // require(
+        //     block.timestamp > _loan.deadline ||
+        //         block.timestamp > nextPaymentDue,
+        //     "Loan is still active and on schedule"
+        // );
+        if (block.timestamp <= _loan.deadline && !missedPayment) {
+            return;
+        }
 
         if (_loan.isBasedNft) {
             if (_loan.lender == address(0)) {
