@@ -469,6 +469,11 @@ const abiDefi = [
 			},
 			{
 				"internalType": "uint256",
+				"name": "dexAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
 				"name": "nftId",
 				"type": "uint256"
 			},

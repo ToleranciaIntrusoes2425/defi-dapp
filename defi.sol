@@ -15,6 +15,7 @@ contract DecentralizedFinance is ERC20, Ownable {
     // TODO: Review types (for optimization)
     struct Loan {
         uint256 amount; // in Wei
+        uint256 dexAmount; // in DEX
         uint256 nftId;
         uint256 start;
         address lender;
@@ -125,6 +126,7 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         loans[id] = Loan({
             amount: weiAmount,
+            dexAmount: dexAmount,
             nftId: 0,
             start: block.timestamp,
             lender: address(this),
@@ -206,6 +208,8 @@ contract DecentralizedFinance is ERC20, Ownable {
                 );
 
                 delete nftToLoanId[_loan.nftContract][_loan.nftId];
+            } else {
+                _transfer(address(this), _loan.borrower, _loan.dexAmount);
             }
             delete loans[loanId];
         }
@@ -248,6 +252,8 @@ contract DecentralizedFinance is ERC20, Ownable {
             payable(_loan.lender).transfer(weiTerminationAmount);
         }
 
+        _transfer(address(this), msg.sender, _loan.dexAmount);
+
         delete loans[loanId];
     }
 
@@ -286,6 +292,7 @@ contract DecentralizedFinance is ERC20, Ownable {
 
         loans[id] = Loan({
             amount: loanAmount,
+            dexAmount: 0,
             nftId: nftId,
             start: block.timestamp,
             lender: address(0),
