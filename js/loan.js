@@ -1,5 +1,6 @@
 import { defiContract, nftContract, updateBalances, web3 } from './connection.js';
 import { defiContractAddress, nftContractAddress, nullAddress } from './constants.js';
+import { loadActiveLendings, loadAvailableLoans } from './lending.js';
 import { displayOwnedNFTs } from './nft.js';
 import { getFirstConnectedAccount, showAlert, truncateAddress } from './utils.js';
 
@@ -133,6 +134,7 @@ async function makePayment(id) {
 
     showAlert('Payment made successfully!', 'success');
     await loadActiveLoans(account);
+    await updateBalances(account);
   } catch (error) {
     console.error("Error making payment:", error);
     showAlert('Error making payment: ' + error.message, 'danger');
@@ -197,6 +199,11 @@ async function loadActiveLoans(account) {
 
     for (let i = 0; i < loanIdCounter; i++) {
       const loan = await defiContract.methods.loans(i).call();
+
+      if (loan.borrower === "0x0000000000000000000000000000000000000000") {
+        continue;
+      }
+
       if (loan.borrower.toLowerCase() === account.toLowerCase()) {
         const loanElement = document.createElement('div');
         loanElement.className = 'loan-item mb-2 p-2 border border-2 rounded';
@@ -231,12 +238,54 @@ async function loadActiveLoans(account) {
 async function checkAllLoans() {
   try {
     const loanCount = await defiContract.methods.loanIdCounter().call();
+    const account = await getFirstConnectedAccount();
+    const periodicity = await defiContract.methods.periodicity().call();
+
+    console.log(`Total loans: ${loanCount}`);
+    console.log(`Periodicity: ${periodicity} seconds`);
+
     for (let i = 0; i < loanCount; i++) {
-      try {
-        await defiContract.methods.checkLoan(i).send({ from: account });
-        console.log(`Checked loan ${i}`);
-      } catch (error) {
-        console.warn(`Loan ${i} not eligible for termination or failed:`, error.message);
+      const loan = await defiContract.methods.loans(i).call();
+
+      if (loan.borrower === nullAddress ) {
+        console.log(`Loan ${i} was already deleted (nullAddress). Skipping...`);
+        continue;
+      }
+
+      console.log(`\nChecking Loan ${i}:`);
+      console.log(`  Borrower: ${loan.borrower}`);
+      console.log(`  Start: ${loan.start}`);
+      console.log(`  Deadline: ${loan.deadline}`);
+      console.log(`  Payments Made: ${loan.paymentsMade}`);
+
+      const totalPayments = Math.floor((loan.deadline - loan.start) / periodicity);
+      const nextPaymentDue = parseInt(loan.start) + (parseInt(loan.paymentsMade) + 1) * parseInt(periodicity);
+
+      const now = Math.floor(Date.now() / 1000);
+      const isExpired = now > loan.deadline;
+      const missedPayment = now > nextPaymentDue && loan.paymentsMade < totalPayments;
+
+      console.log(`  Total Payments: ${totalPayments}`);
+      console.log(`  Next Payment Due: ${nextPaymentDue} (${new Date(nextPaymentDue * 1000).toLocaleString()})`);
+      console.log(`  Current Time: ${now} (${new Date(now * 1000).toLocaleString()})`);
+      console.log(`  isExpired: ${isExpired}`);
+      console.log(`  missedPayment: ${missedPayment}`);
+
+      if (isExpired || missedPayment) {
+        console.log(`  Attempting to check and close loan ${i}...`);
+        try {
+          await defiContract.methods.checkLoan(i).send({ from: account });
+          await loadActiveLoans(account);
+          await loadAvailableLoans(account);
+          await displayOwnedNFTs(account);
+          await loadActiveLendings(account);
+          console.log(`Loan ${i} checked and closed`)
+          console.log(`Loan ${i} checked`);
+        } catch (error) {
+          console.error(`Error checking loan ${i}:`, error);
+        }
+      } else {
+        console.log(`Loan ${i} is still active`);
       }
     }
     console.log('All loans checked');
