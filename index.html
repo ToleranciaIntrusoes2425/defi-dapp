@@ -144,8 +144,8 @@
                 <input type="number" class="form-control" id="Damount" required>
               </div>
               <div class="mb-3">
-                <label for="date" class="form-label">Deadline in days (max 28 days):</label>
-                <input type="number" class="form-control" id="deadline" required>
+                <label for="date" class="form-label">Deadline (max 28 days):</label>
+                <input type="datetime-local" class="form-control" id="deadline" required>
               </div>
               <button type="submit" class="btn btn-success" data-bs-dismiss="modal" onclick=createLoan()>Create</button>
             </div>
@@ -172,8 +172,8 @@
           <input type="number" class="form-control" id="nftLoan" required>
         </div>
         <div class="mb-3">
-          <label for="nftDeadline" class="form-label">Deadline in days (max 28 days):</label>
-          <input type="number" class="form-control" id="nftDeadline" required>
+          <label for="nftDeadline" class="form-label">Deadline (max 28 days):</label>
+          <input type="datetime-local" class="form-control" id="nftDeadline" required>
         </div>
         <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="createNftLoan()">Create</button>
       </div>
