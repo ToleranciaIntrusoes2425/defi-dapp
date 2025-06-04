@@ -103,6 +103,7 @@ http://localhost:8080
 - **You may use Ganache network but the NFT token URIs won't work.**
 - We provide a database with the contracts already deployed in /blockchain folder.
 - The steps below were successfully on Linux, but not on Windows.
+- The database may be corrupted, if that's the case you need to delete the /blockchain folder, deploy the contracts and update their addresses in constants.js.
 
 ### 1. Install Ganache
 ```
