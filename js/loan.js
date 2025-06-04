@@ -200,7 +200,7 @@ async function loadActiveLoans(account) {
     for (let i = 0; i < loanIdCounter; i++) {
       const loan = await defiContract.methods.loans(i).call();
 
-      if (loan.borrower === "0x0000000000000000000000000000000000000000") {
+      if (loan.borrower === nullAddress) {
         continue;
       }
 
@@ -241,8 +241,8 @@ async function checkAllLoans() {
     const account = await getFirstConnectedAccount();
     const periodicity = await defiContract.methods.periodicity().call();
 
-    console.log(`Total loans: ${loanCount}`);
-    console.log(`Periodicity: ${periodicity} seconds`);
+    // console.log(`Total loans: ${loanCount}`);
+    // console.log(`Periodicity: ${periodicity} seconds`);
 
     for (let i = 0; i < loanCount; i++) {
       const loan = await defiContract.methods.loans(i).call();
