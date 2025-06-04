@@ -1,9 +1,9 @@
-import { changeRate, checkAccountConnection, connectMetaMask, } from './connection.js';
+import { changeRate, checkAccountConnection, connectMetaMask, updateUI } from './connection.js';
 import { executeExchange, switchExchangeTokens, updateExchangeRate, updateSwapRate } from './exchange.js';
+import { lendToNftLoan } from './lending.js';
 import { createLoan, createNftLoan, initLoanNotifications, makePayment, terminateLoan } from './loan.js';
 import { mintNft, viewNftDetails } from './nft.js';
 
-window.connectMetaMask = connectMetaMask;
 
 if (document.readyState === 'complete') {
   (async () => {
@@ -19,6 +19,11 @@ if (document.readyState === 'complete') {
   });
 }
 
+window.ethereum.on('accountsChanged', (_) => {
+  window.location.reload();
+});
+
+window.connectMetaMask = connectMetaMask;
 window.createNftLoan = createNftLoan;
 window.createLoan = createLoan;
 window.changeRate = changeRate;
@@ -29,3 +34,4 @@ window.mintNft = mintNft;
 window.viewNftDetails = viewNftDetails;
 window.makePayment = makePayment;
 window.terminateLoan = terminateLoan;
+window.lendToNftLoan = lendToNftLoan;

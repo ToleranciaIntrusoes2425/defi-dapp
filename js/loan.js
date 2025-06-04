@@ -1,5 +1,5 @@
 import { defiContract, nftContract, updateBalances, web3 } from './connection.js';
-import { defiContractAddress, nftContractAddress } from './constants.js';
+import { defiContractAddress, nftContractAddress, nullAddress } from './constants.js';
 import { displayOwnedNFTs } from './nft.js';
 import { getFirstConnectedAccount, showAlert, truncateAddress } from './utils.js';
 
@@ -72,10 +72,12 @@ async function createNftLoan() {
       .send({ from: account });
 
     await displayOwnedNFTs(account);
-    alert('NFT Loan request created successfully!');
+    showAlert("NFT loan request created successfully!", "success");
+    await updateBalances(account);
+    await loadActiveLoans(account);
   } catch (error) {
     console.error("Error creating NFT loan:", error);
-    alert('Error creating NFT loan: ' + error.message);
+    showAlert("Error creating NFT loan: " + error.message, "danger");
   }
 }
 
@@ -185,10 +187,21 @@ async function loadActiveLoans(account) {
           <p><strong>Amount:</strong> ${web3.utils.fromWei(loan.amount, 'ether')} ETH</p>
           <p><strong>Deadline:</strong> ${new Date(loan.deadline * 1000).toLocaleString()}</p>
           <p><strong>Type:</strong> ${loan.isBasedNft ? 'NFT-based' : 'DEX-based'}</p>
-          ${loan.isBasedNft ? `<p><strong>NFT ID:</strong> ${loan.nftId}</p>` : ''}
-          <button onclick="makePayment(${i})" class="btn btn-success w-100">Make Payment</button>
-          ${loan.isBasedNft ? '' : `<button onclick="terminateLoan(${i})" class="btn btn-danger w-100 mt-2">Terminate Loan</button>`}
         `;
+
+        if (loan.isBasedNft) {
+          loanElement.innerHTML += `
+            <p><strong>NFT ID:</strong> ${loan.nftId}</p>
+            <p><strong>Lender:</strong> ${loan.lender == nullAddress ? 'None' : truncateAddress(loan.lender, 8)}</p>
+          `;
+        }
+
+        loanElement.innerHTML += `<button onclick="makePayment(${i})" class="btn btn-success w-100">Make Payment</button>`;
+
+        if (!loan.isBasedNft) {
+          loanElement.innerHTML += `<button onclick="terminateLoan(${i})" class="btn btn-danger w-100 mt-2">Terminate Loan</button>`;
+        }
+
         activeLoansContainer.appendChild(loanElement);
       }
     }

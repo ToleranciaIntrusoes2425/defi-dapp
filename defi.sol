@@ -127,10 +127,10 @@ contract DecentralizedFinance is ERC20, Ownable {
             amount: weiAmount,
             nftId: 0,
             start: block.timestamp,
+            lender: address(this),
             borrower: msg.sender,
             nftContract: address(0),
             deadline: deadline,
-            lender: address(this),
             paymentsMade: 0,
             isBasedNft: false,
             isActive: true
@@ -248,15 +248,6 @@ contract DecentralizedFinance is ERC20, Ownable {
             payable(_loan.lender).transfer(weiTerminationAmount);
         }
 
-        if (_loan.isBasedNft) {
-            IERC721(_loan.nftContract).transferFrom(
-                address(this),
-                _loan.borrower,
-                _loan.nftId
-            );
-
-            delete nftToLoanId[_loan.nftContract][_loan.nftId];
-        }
         delete loans[loanId];
     }
 
@@ -297,10 +288,10 @@ contract DecentralizedFinance is ERC20, Ownable {
             amount: loanAmount,
             nftId: nftId,
             start: block.timestamp,
+            lender: address(0),
             borrower: msg.sender,
             nftContract: nftContractAddress,
             deadline: deadline,
-            lender: address(0),
             paymentsMade: 0,
             isBasedNft: true,
             isActive: true
@@ -347,6 +338,7 @@ contract DecentralizedFinance is ERC20, Ownable {
             _loan.lender == address(0),
             "There's already a lender for that loan"
         );
+        require(_loan.borrower != msg.sender, "You can't lend to yourself");
         require(msg.value == _loan.amount, "Incorrect ETH amount sent");
 
         _loan.lender = msg.sender;
@@ -357,7 +349,7 @@ contract DecentralizedFinance is ERC20, Ownable {
     }
 
     function checkLoan(uint256 loanId) external onlyOwner {
-        require(loanId < loanIdCounter.current(), "Loan does not exist");
+        require(loanId < loanIdCounter.current(), "Loan not found");
 
         Loan storage _loan = loans[loanId];
 

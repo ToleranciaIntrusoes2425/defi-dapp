@@ -114,6 +114,10 @@
           <!-- Lending Platform Section -->
           <div class="card p-4 shadow">
             <h3 class="mb-3">Lending Platform</h3>
+            <div id="your-lendings" class="mb-3">
+              <h5>Your lendings</h5>
+              <div class="loan-lendings"></div>
+            </div>
             <div id="available-loans">
               <h5>Available NFT Loans</h5>
               <div class="loan-requests"></div>
@@ -143,7 +147,7 @@
                 <label for="date" class="form-label">Deadline in days (max 28 days):</label>
                 <input type="number" class="form-control" id="deadline" required>
               </div>
-              <button type="submit" class="btn btn-success" data-bs-dismiss="modal" onclick=createLoan()>Enviar</button>
+              <button type="submit" class="btn btn-success" data-bs-dismiss="modal" onclick=createLoan()>Create</button>
             </div>
 
           </div>

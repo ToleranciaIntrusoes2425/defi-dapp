@@ -49,9 +49,6 @@ async function displayOwnedNFTs(account) {
       const tokenIdValue = parseInt(tokenId, 10);
       if (isNaN(tokenIdValue)) continue;
 
-      console.log(`Fetching details for NFT ID: ${tokenIdValue}`);
-      console.log(typeof tokenIdValue);
-
       const isGanache = (await web3.eth.getChainId()) == 1337;
 
       const tokenURI = isGanache

@@ -2,7 +2,7 @@ import abiDefi from "./abi_defi.js";
 import abiNft from "./abi_nft.js";
 import { defiContractAddress, nftContractAddress } from "./constants.js";
 import { updateSwapRate } from "./exchange.js";
-import { loadAvailableLoans } from "./lending.js";
+import { loadActiveLendings, loadAvailableLoans } from "./lending.js";
 import { loadActiveLoans } from "./loan.js";
 import { displayOwnedNFTs } from "./nft.js";
 import { getFirstAvailableAccount, getFirstConnectedAccount, showAlert, truncateAddress } from "./utils.js";
@@ -36,6 +36,7 @@ async function updateBalances(account) {
 }
 
 async function updateUI(account) {
+  console.log("Updating UI for account:", account);
   updateWalletConnect(account);
 
   if (defiContractOwner.toLowerCase() === account.toLowerCase()) {
@@ -48,13 +49,14 @@ async function updateUI(account) {
     document.querySelector('.change-rate-text').innerHTML = ``;
   }
 
-  updateSwapRate();
+  await updateSwapRate();
 
   if (account) {
-    loadActiveLoans(account);
-    loadAvailableLoans(account);
-    updateBalances(account);
-    displayOwnedNFTs(account);
+    await loadActiveLoans(account);
+    await loadAvailableLoans(account);
+    await loadActiveLendings(account);
+    await updateBalances(account);
+    await displayOwnedNFTs(account);
   }
 }
 
@@ -95,7 +97,7 @@ async function connectMetaMask() {
     return;
   }
 
-  updateUI(account);
+  await updateUI(account);
 }
 
 async function checkAccountConnection() {
@@ -106,21 +108,13 @@ async function checkAccountConnection() {
   }
 
   console.log('Connected account:', account);
-  updateUI(account);
-
-  // Set up balance refresh when account changes
-  window.ethereum.on('accountsChanged', (accounts) => {
-    if (accounts.length === 0) {
-      updateUI(null);
-    } else {
-      updateUI(accounts[0]);
-    }
-  });
+  await updateUI(account);
 }
 
 export {
   changeRate, checkAccountConnection,
   connectMetaMask,
-  defiContract, defiContractOwner, nftContract, nftContractOwner, updateBalances, web3
+  defiContract, defiContractOwner, nftContract, nftContractOwner, updateBalances, web3,
+  updateUI
 };
 

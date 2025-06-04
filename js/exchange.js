@@ -63,17 +63,28 @@ async function updateExchangeRate(event) {
 }
 
 function switchExchangeTokens(event) {
+  let target = null;
+  if (event && event.type === 'change') {
+    target = event.target;
+  }
+
   const { fromTokenElement, toTokenElement, fromAmountElement, toAmountElement } = getTokenElements();
+  const fromToken = fromTokenElement.value;
+  const toToken = toTokenElement.value;
+  const fromAmount = fromAmountElement.value;
+  const toAmount = toAmountElement.value;
 
-  // Swap token selections
-  const temp = fromTokenElement.value;
-  fromTokenElement.value = toTokenElement.value;
-  toTokenElement.value = temp;
+  if (!target) {
+    fromTokenElement.value = toToken;
+    toTokenElement.value = fromToken;
+  } else if (target.id === 'from-token') {
+    toTokenElement.value = toToken === 'DEX' ? 'ETH' : 'DEX';
+  } else if (target.id === 'to-token') {
+    fromTokenElement.value = fromToken === 'DEX' ? 'ETH' : 'DEX';
+  }
 
-  // Swap amounts
-  const tempAmount = fromAmountElement.value;
-  fromAmountElement.value = toAmountElement.value;
-  toAmountElement.value = tempAmount;
+  fromAmountElement.value = toAmount;
+  toAmountElement.value = fromAmount;
 }
 
 async function executeExchange(event) {
